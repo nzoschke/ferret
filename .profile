@@ -1,9 +1,10 @@
 #!/bin/bash
-set -x
 
-# if ssh keys are in the environment, write to $HOME/.ssh
-
+# no-op if ssh keys are not in the environment
 [ -z "$SSH_PRIVATE_KEY" ] || [ -z "$SSH_PUBLIC_KEY" ] && exit 0
+
+# otherwise, write to $HOME/.ssh
+echo "setting up ~/.ssh"
 
 mkdir -p $HOME/.ssh
 
