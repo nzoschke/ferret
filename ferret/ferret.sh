@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo $PATH
 TIMEOUT=${TIMEOUT:-120}
 
 function _init() {
@@ -9,7 +10,7 @@ function _init() {
   WORK_DIR=$(pwd)
 
   SRC_PATH=$(basename $0)
-  TARGET_APP=${SRC_PATH%.*}
+  TARGET_APP=ferret-${SRC_PATH%.*}
 
   log _init dir=\"$TEMP_DIR\" at=start
 
