@@ -5,13 +5,14 @@ TIMEOUT=${TIMEOUT:-120}
 function _init() {
   PID=$$
   START=$(now)
-  TEMP_DIR=/tmp/ferret-$RANDOM
+  RAND=$(rand)
+  TEMP_DIR=/tmp/ferret-$RAND
   WORK_DIR=$(pwd)
 
   SRC_PATH=$(basename $0)
   TARGET_APP=ferret-${SRC_PATH%.*}
 
-  log _init dir=\"$TEMP_DIR\" at=start
+  log _init at=start
 
   mkdir -p $TEMP_DIR
   cd $TEMP_DIR
@@ -37,11 +38,11 @@ function _exit() {
   cd $WORK_DIR
 
   ELAPSED=$(now $START)
-  log _init dir=\"$TEMP_DIR\" at=exit elapsed=$ELAPSED status=$STATUS
+  log _init dir=\"$TEMP_DIR\" at=exit status=$STATUS elapsed=$ELAPSED measure=true
 }
 
 function log() {
-  echo app=ferret target_app=$TARGET_APP fn="$@"
+  echo app=ferret xid=$RAND target_app=$TARGET_APP fn="$@"
 }
 
 function log_file() {
@@ -75,7 +76,7 @@ EOF
   local STATUS=$?
   
   local ELAPSED=$(now $START)
-  log mail from=\"$FROM\" to=\"$TO\" subject=\"$SUBJECT\" at=$1 status=$? measure=true elapsed=$ELAPSED 
+  log mail from=\"$FROM\" to=\"$TO\" subject=\"$SUBJECT\" at=$1 status=$? elapsed=$ELAPSED measure=true
 
   exit 1
 }
@@ -96,8 +97,9 @@ function retry() {
     bash -sx <<< "$SCRIPT" >>$TEMP_DIR/log 2>&1
     local STATUS=$?
 
+    [ $STATUS -eq 0 ] && AT=success || AT=error
     local ELAPSED=$(now $START)
-    log $STEP i=$i at=finish status=$STATUS measure=true elapsed=$ELAPSED
+    log $STEP i=$i at=$AT status=$STATUS elapsed=$ELAPSED measure=true
 
     [ $STATUS -eq 0 ] && break || ((X++))
   done
@@ -108,6 +110,10 @@ function retry() {
 
 function now() {
   ruby -e 'printf "%.2f", Time.now.to_f - ARGV[0].to_f' ${1:-0}
+}
+
+function rand() {
+  ruby -e 'require "securerandom"; puts SecureRandom.hex(4)'
 }
 
 _init
