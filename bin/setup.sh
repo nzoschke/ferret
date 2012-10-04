@@ -10,4 +10,4 @@ heroku keys:add   --app $APP
 heroku config:set --app $APP SSH_PRIVATE_KEY="$(< $HOME/.ssh/id_rsa)" SSH_PUBLIC_KEY="$(< $HOME/.ssh/id_rsa.pub)"
 
 # verify setup
-git clone git@heroku.com:$APP.git && echo "Setup complete" || echo "Setup FAILED"
+git clone git@heroku.com:$APP.git && echo "setup complete!" || echo "setup FAILED"
