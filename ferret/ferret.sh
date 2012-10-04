@@ -16,7 +16,6 @@ function _init() {
   mkdir -p $TEMP_DIR
   cd $TEMP_DIR
 
-  set -x
   exec 2>>$TEMP_DIR/log
 
   trap _alarm SIGALRM
