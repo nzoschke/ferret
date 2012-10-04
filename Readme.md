@@ -51,3 +51,12 @@ $ heroku run ferret/git-push-cedar.sh
 
 $ heroku scale git_push_cedar=1
 ```
+
+## Metrics
+
+Create an account on Librato use it to get a drain on https://www.l2met.net/
+
+```sh
+$ heroku sudo passes:add logplex-beta-program
+$ heroku drains:add https://drain.l2met.net/consumers/36f8e609-df04-4da2-8630-86a959f41c68/logs
+```
