@@ -49,6 +49,8 @@ function log_file() {
 }
 
 function mail() {
+  log_file mail log
+
   # check for GMAIL_USER var without leaking value into logs
   export | grep GMAIL_USER 1>/dev/null || { log mail at=error message=\"GMAIL_USER unset\"; exit -1; }
 
@@ -66,16 +68,14 @@ EOF
 
   cat log >> message.txt
 
-  log_file mail message.txt
-
-  # local START=$(now)
-  #
-  # log mail from=\"$FROM\" to=\"$TO\" subject=\"$SUBJECT\" at=start
-  # curl -vi -n --ssl-reqd --mail-from "<$FROM>" --mail-rcpt "<$TO>" --url smtps://smtp.gmail.com:465 -T message.txt -u $GMAIL_USER
-  # local STATUS=$?
-  #
-  # local ELAPSED=$(now $START)
-  # log mail from=\"$FROM\" to=\"$TO\" subject=\"$SUBJECT\" at=$1 status=$? measure=true elapsed=$ELAPSED 
+  local START=$(now)
+  
+  log mail from=\"$FROM\" to=\"$TO\" subject=\"$SUBJECT\" at=start
+  curl -vi -n --ssl-reqd --mail-from "<$FROM>" --mail-rcpt "<$TO>" --url smtps://smtp.gmail.com:465 -T message.txt -u $GMAIL_USER
+  local STATUS=$?
+  
+  local ELAPSED=$(now $START)
+  log mail from=\"$FROM\" to=\"$TO\" subject=\"$SUBJECT\" at=$1 status=$? measure=true elapsed=$ELAPSED 
 
   exit 1
 }
