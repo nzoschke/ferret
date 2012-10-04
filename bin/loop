@@ -1,0 +1,5 @@
+#!/bin/bash
+
+SLEEP=${SLEEP:-5}
+
+while true; do "$@"; sleep $SLEEP; done
