@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PATH=/app/bin:$PATH
+
 echo "setting up ~/.ssh"
 
 mkdir -p $HOME/.ssh
