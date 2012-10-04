@@ -1,6 +1,5 @@
 #!/bin/bash
 
-echo $PATH
 TIMEOUT=${TIMEOUT:-120}
 
 function _init() {
@@ -67,7 +66,7 @@ EOF
   log mail from=\"$FROM\" to=\"$TO\" subject=\"$SUBJECT\" at=start
 
   cat message.txt
-  curl -vi -n --ssl-reqd --mail-from "<$FROM>" --mail-rcpt "<$TO>" --url smtps://smtp.gmail.com:465 -T message.txt -u $GMAIL_USER
+  #curl -vi -n --ssl-reqd --mail-from "<$FROM>" --mail-rcpt "<$TO>" --url smtps://smtp.gmail.com:465 -T message.txt -u $GMAIL_USER
   local STATUS=$?
 
   local ELAPSED=$(now $START)

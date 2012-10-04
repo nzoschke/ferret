@@ -2,6 +2,7 @@
 source $(dirname $0)/ferret.sh
 
 retry 5 heroku-info-create noah@heroku.com <<EOF
+  echo $PATH
   heroku info --app $TARGET_APP || heroku create $TARGET_APP
 EOF
 
