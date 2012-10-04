@@ -17,13 +17,13 @@ function _init() {
   cd $TEMP_DIR
 
   set -x
-#  exec 2>>$TEMP_DIR/log
+  exec 2>>$TEMP_DIR/log
 
   trap _alarm SIGALRM
   (sleep $TIMEOUT && kill -ALRM $$) &
   ALARM_PID=$!
 
-  trap "{ kill $ALARM_PID; _exit; }" EXIT
+  trap '{ kill $(pgrep -P $ALARM_PID); _exit; }' EXIT
 }
 
 function _alarm() {
