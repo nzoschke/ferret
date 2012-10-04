@@ -31,8 +31,7 @@ $ heroku run bin/setup
 ## Local Run
 
 ```sh
-$ export $(cat .env)
-$ ./ferret/git-push-cedar.sh
+$ ferret/git-push-cedar.sh
 app=ferret target_app=ferret-git-push-cedar fn=_init dir="/tmp/ferret-6829" at=start
 app=ferret target_app=ferret-git-push-cedar fn=heroku-info-create i=0 at=start
 app=ferret target_app=ferret-git-push-cedar fn=heroku-info-create i=0 at=finish status=0 measure=true elapsed=2.31
