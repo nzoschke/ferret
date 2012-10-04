@@ -2,7 +2,11 @@
 source $(dirname $0)/ferret.sh
 
 retry 5 heroku-info-create noah@heroku.com <<EOF
-  heroku info --app $TARGET_APP || heroku create $TARGET_APP
+  heroku info --app $TARGET_APP || {
+    heroku create $TARGET_APP                                             \
+      && heroku plugins:install https://github.com/heroku/manager-cli.git \
+      && heroku manager:transfer --app $TARGET_APP --to ferret
+  }
 EOF
 
 retry 1 temp-repo-create noah@heroku.com <<EOF
