@@ -16,10 +16,11 @@ function _init() {
   mkdir -p $TEMP_DIR
   cd $TEMP_DIR
 
-  exec 2>>$TEMP_DIR/log
+  set -x
+#  exec 2>>$TEMP_DIR/log
 
   trap _alarm SIGALRM
-  (sleep $TIMEOUT; kill -ALRM $$) &
+  (sleep $TIMEOUT && kill -ALRM $$) &
   ALARM_PID=$!
 
   trap "{ kill $ALARM_PID; _exit; }" EXIT
@@ -38,6 +39,8 @@ function _exit() {
 
   ELAPSED=$(now $START)
   log _init dir=\"$TEMP_DIR\" at=exit status=$STATUS elapsed=$ELAPSED measure=true
+
+  exit $STATUS
 }
 
 function log() {
