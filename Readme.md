@@ -24,13 +24,14 @@ $ git push heroku master
 $ heroku run bin/setup.sh
 ```
 
-## Run
+## Local Run
 
 ```sh
+$ export $(cat .env)
 $ heroku run ferret/git-push-cedar
 ```
 
-## Scale
+## Platform Run
 
 ```sh
 $ heroku scale git_push_cedar=1
