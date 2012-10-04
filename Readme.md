@@ -32,11 +32,23 @@ $ heroku run bin/setup
 
 ```sh
 $ export $(cat .env)
-$ heroku run ferret/git-push-cedar
+$ ./ferret/git-push-cedar.sh
+app=ferret target_app=ferret-git-push-cedar fn=_init dir="/tmp/ferret-6829" at=start
+app=ferret target_app=ferret-git-push-cedar fn=heroku-info-create i=0 at=start
+app=ferret target_app=ferret-git-push-cedar fn=heroku-info-create i=0 at=finish status=0 measure=true elapsed=2.31
+app=ferret target_app=ferret-git-push-cedar fn=temp-repo-create i=0 at=start
+app=ferret target_app=ferret-git-push-cedar fn=temp-repo-create i=0 at=finish status=0 measure=true elapsed=0.09
+app=ferret target_app=ferret-git-push-cedar fn=git-push-cedar i=0 at=start
+app=ferret target_app=ferret-git-push-cedar fn=git-push-cedar i=0 at=finish status=0 measure=true elapsed=8.57
+app=ferret target_app=ferret-git-push-cedar fn=_init dir="/tmp/ferret-6829" at=exit elapsed=11.16 status=0
 ```
 
 ## Platform Run
 
 ```sh
+$ heroku run ferret/git-push-cedar.sh
+
+# OR
+
 $ heroku scale git_push_cedar=1
 ```
