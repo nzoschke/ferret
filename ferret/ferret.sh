@@ -100,7 +100,7 @@ function retry() {
 
     [ $STATUS -eq 0 ] && AT=success || AT=error
     local ELAPSED=$(now $START)
-    log $STEP i=$i at=$AT status=$STATUS measure=true 
+    log $STEP i=$i at=$STEP-$AT status=$STATUS measure=true 
     log $STEP i=$i at=finish elapsed=$ELAPSED measure=true
 
     [ $STATUS -eq 0 ] && break || ((X++))
