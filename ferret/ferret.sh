@@ -22,7 +22,7 @@ function _init() {
   (sleep $TIMEOUT; kill -ALRM $$) &
   ALARM_PID=$!
 
-  trap "{ kill \$ALARM_PID; _exit; }" EXIT
+  trap "{ kill $ALARM_PID; _exit; }" EXIT
 }
 
 function _alarm() {
