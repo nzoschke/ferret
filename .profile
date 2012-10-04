@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export PATH=/app/bin:$PATH
+export PATH=/app/bin:/app/vendor/bundle/ruby/1.9.1/bin:$PATH
 
 echo "setting up ~/.ssh"
 
