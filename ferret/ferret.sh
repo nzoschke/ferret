@@ -37,13 +37,13 @@ function _exit() {
   cd $WORK_DIR
 
   ELAPSED=$(now $START)
-  log _init dir=\"$TEMP_DIR\" at=exit status=$STATUS elapsed=$ELAPSED measure=true
+  log _init at=exit status=$STATUS elapsed=$ELAPSED measure=true
 
   exit $STATUS
 }
 
 function log() {
-  echo app=ferret xid=$RAND target_app=$TARGET_APP fn="$@"
+  echo app=$TARGET_APP xid=$RAND fn="$@"
 }
 
 function log_file() {
@@ -100,7 +100,8 @@ function retry() {
 
     [ $STATUS -eq 0 ] && AT=success || AT=error
     local ELAPSED=$(now $START)
-    log $STEP i=$i at=$AT status=$STATUS elapsed=$ELAPSED measure=true
+    log $STEP i=$i at=$AT status=$STATUS measure=true 
+    log $STEP i=$i at=finish elapsed=$ELAPSED measure=true
 
     [ $STATUS -eq 0 ] && break || ((X++))
   done

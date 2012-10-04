@@ -9,13 +9,13 @@ retry 5 heroku-info-create noah@heroku.com <<EOF
   }
 EOF
 
-retry 1 temp-repo-create noah@heroku.com <<EOF
+retry 1 init-commit noah@heroku.com <<EOF
   git init app
   cd app
   git commit --allow-empty -m "empty"
 EOF
 
-retry 2 git-push-cedar noah@heroku.com <<EOF
+retry 2 push noah@heroku.com <<EOF
   cd app
   git push -f git@heroku.com:$TARGET_APP.git master:test
 EOF
