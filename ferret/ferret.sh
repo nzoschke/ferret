@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TIMEOUT=${TIMEOUT:-120}
+TIMEOUT=${TIMEOUT:-180}
 
 function _init() {
   START=$(now)
