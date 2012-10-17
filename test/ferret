@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+require "minitest/autorun"
+require "stringio"
+require "tmpdir"
+
+class StringIO
+  def read!
+    rewind
+    s = read.gsub(/elapsed=[0-9.]+/, "elapsed=X")
+  end
+end
+
+ENV["XID"]  = "deadbeef"
+
+$logdev = StringIO.new
+$logger = StringIO.new
+
+require_relative "../lib/ferret"
+
+class TestMeme < MiniTest::Unit::TestCase
+  def setup
+    ENV["TEMP_DIR"] = Dir.mktmpdir
+    $logdev.rewind
+    $logdev.truncate(0)
+  end
+
+  def test_bash_true
+    bash(name: "true", stdin: <<-'EOF')
+      true
+    EOF
+
+    assert_equal $logdev.read!, <<EOF
+app=ferret-ferret xid=deadbeef fn=true i=0 at=enter
+app=ferret-ferret xid=deadbeef fn=true i=0 at=true-success status=0 measure=true
+app=ferret-ferret xid=deadbeef fn=true i=0 at=return elapsed=X measure=true
+EOF
+  end
+
+  def test_bash_retry_false
+    assert_raises(SystemExit) do
+      bash(retry: 2, name: "false", stdin: <<-'EOF')
+        false
+      EOF
+    end
+
+    assert_equal $logdev.read!, <<EOF
+app=ferret-ferret xid=deadbeef fn=false i=0 at=enter
+app=ferret-ferret xid=deadbeef fn=false i=0 at=false-error status=256 measure=true
+app=ferret-ferret xid=deadbeef fn=false i=0 at=return elapsed=X
+app=ferret-ferret xid=deadbeef fn=false i=1 at=enter
+app=ferret-ferret xid=deadbeef fn=false i=1 at=false-error status=256 measure=true
+app=ferret-ferret xid=deadbeef fn=false i=1 at=return elapsed=X
+EOF
+  end
+
+end
