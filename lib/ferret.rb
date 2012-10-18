@@ -13,7 +13,7 @@ $logdev           ||= $stdout
 $logger           ||= IO.popen("logger", "w")
 
 trap("EXIT") do
-  log fn: :exit
+  log fn: :exit, logger_pid: $logger.pid
   Process.kill("TERM", $logger.pid) if $logger.pid
   FileUtils.rm_rf ENV["TEMP_DIR"]
 end
