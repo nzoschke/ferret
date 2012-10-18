@@ -3,13 +3,6 @@ require "minitest/autorun"
 require "stringio"
 require "tmpdir"
 
-class StringIO
-  def read!
-    rewind
-    s = read.gsub(/elapsed=[0-9.]+/, "elapsed=X")
-  end
-end
-
 ENV["XID"]  = "deadbeef"
 
 $logdev = StringIO.new
@@ -24,33 +17,115 @@ class TestMeme < MiniTest::Unit::TestCase
     $logdev.truncate(0)
   end
 
+  def logs
+    $logdev.rewind
+    $logdev.read.gsub(/elapsed=[0-9.]+/, "elapsed=X")
+  end
+
   def test_bash_true
     bash(name: "true", stdin: <<-'EOF')
       true
     EOF
 
-    assert_equal $logdev.read!, <<EOF
+    assert_equal logs, <<EOF
 app=ferret-ferret xid=deadbeef fn=true i=0 at=enter
 app=ferret-ferret xid=deadbeef fn=true i=0 at=true-success status=0 measure=true
 app=ferret-ferret xid=deadbeef fn=true i=0 at=return elapsed=X measure=true
 EOF
   end
 
-  def test_bash_retry_false
+  def test_bash_false
+    assert_raises(SystemExit) do
+      bash(name: "false", stdin: <<-'EOF')
+        false
+      EOF
+    end
+
+    assert_equal logs, <<EOF
+app=ferret-ferret xid=deadbeef fn=false i=0 at=enter
+app=ferret-ferret xid=deadbeef fn=false i=0 at=false-error status=1 measure=true
+app=ferret-ferret xid=deadbeef fn=false i=0 at=return elapsed=X
+EOF
+  end
+
+  def test_bash_retry
     assert_raises(SystemExit) do
       bash(retry: 2, name: "false", stdin: <<-'EOF')
         false
       EOF
     end
 
-    assert_equal $logdev.read!, <<EOF
+    assert_equal logs, <<EOF
 app=ferret-ferret xid=deadbeef fn=false i=0 at=enter
-app=ferret-ferret xid=deadbeef fn=false i=0 at=false-error status=256 measure=true
+app=ferret-ferret xid=deadbeef fn=false i=0 at=false-error status=1 measure=true
 app=ferret-ferret xid=deadbeef fn=false i=0 at=return elapsed=X
 app=ferret-ferret xid=deadbeef fn=false i=1 at=enter
-app=ferret-ferret xid=deadbeef fn=false i=1 at=false-error status=256 measure=true
+app=ferret-ferret xid=deadbeef fn=false i=1 at=false-error status=1 measure=true
 app=ferret-ferret xid=deadbeef fn=false i=1 at=return elapsed=X
 EOF
   end
 
+  def test_bash_status
+    bash(name: "nonzero", status: 128, stdin: <<-'EOF')
+      exit 128
+    EOF
+
+    assert_equal logs, <<EOF
+app=ferret-ferret xid=deadbeef fn=nonzero i=0 at=enter
+app=ferret-ferret xid=deadbeef fn=nonzero i=0 at=nonzero-success status=128 measure=true
+app=ferret-ferret xid=deadbeef fn=nonzero i=0 at=return elapsed=X measure=true
+EOF
+  end
+
+  def test_bash_status_nil
+    bash(name: "nonzero", status: nil, stdin: <<-'EOF')
+      exit 128
+    EOF
+
+    assert_equal logs, <<EOF
+app=ferret-ferret xid=deadbeef fn=nonzero i=0 at=enter
+app=ferret-ferret xid=deadbeef fn=nonzero i=0 at=nonzero-success status=128 measure=true
+app=ferret-ferret xid=deadbeef fn=nonzero i=0 at=return elapsed=X measure=true
+EOF
+  end
+
+  def test_bash_pattern_true
+    bash(name: "grep", pattern: /hi/, stdin: <<-'EOF')
+      echo hi
+    EOF
+
+    assert_equal logs, <<EOF
+app=ferret-ferret xid=deadbeef fn=grep i=0 at=enter
+app=ferret-ferret xid=deadbeef fn=grep i=0 at=grep-success status=0 measure=true
+app=ferret-ferret xid=deadbeef fn=grep i=0 at=return elapsed=X measure=true
+EOF
+  end
+
+  def test_bash_pattern_false
+    assert_raises(SystemExit) do
+      bash(name: "grep", pattern: /hi/, stdin: <<-'EOF')
+        echo hello
+      EOF
+    end
+
+    assert_equal logs, <<EOF
+app=ferret-ferret xid=deadbeef fn=grep i=0 at=enter
+app=ferret-ferret xid=deadbeef fn=grep i=0 at=grep-error status=0 measure=true
+app=ferret-ferret xid=deadbeef fn=grep i=0 at=error out='hello'
+app=ferret-ferret xid=deadbeef fn=grep i=0 at=return elapsed=X
+EOF
+  end
+
+  def test_bash_pattern_status
+    bash(name: "grep", pattern: /hi/, status: nil, stdin: <<-'EOF')
+      echo hi
+      exit 1
+    EOF
+
+    assert_equal logs, <<EOF
+app=ferret-ferret xid=deadbeef fn=grep i=0 at=enter
+app=ferret-ferret xid=deadbeef fn=grep i=0 at=grep-success status=1 measure=true
+app=ferret-ferret xid=deadbeef fn=grep i=0 at=return elapsed=X measure=true
+EOF
+  end
 end
