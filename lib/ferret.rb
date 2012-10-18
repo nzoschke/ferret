@@ -28,7 +28,7 @@ class Hash
 end
 
 def bash(opts={})
-  opts.rmerge!(name: "bash", retry: 1, status: 0, stdin: "false", timeout: 180)
+  opts.rmerge!(name: "bash", retry: 1, pattern: nil, status: 0, stdin: "false", timeout: 180)
 
   begin
     Timeout.timeout(opts[:timeout]) do
@@ -48,14 +48,21 @@ def bash(opts={})
           Process.wait(pid)
           w1.close
 
-          if $?.to_i == opts[:status]
-            log fn: opts[:name], i: i, at: "#{opts[:name]}-success", status: $?.to_i, measure: true
-            success = true
+          status = $?.exitstatus
+          out    = r1.read
+
+          success   = true
+          success &&= status == opts[:status]   if opts[:status]
+          success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
+
+          if success
+            log fn: opts[:name], i: i, at: "#{opts[:name]}-success", status: status, measure: true
           else
-            log fn: opts[:name], i: i, at: "#{opts[:name]}-error",   status: $?.to_i, measure: true
-            r1.each_line { |l| log fn: opts[:name], i: i, at: :error, out: "'#{l.strip}'" }
-            success = false
+            log fn: opts[:name], i: i, at: "#{opts[:name]}-error",   status: status, measure: true
+            out.each_line { |l| log fn: opts[:name], i: i, at: :error, out: "'#{l.strip}'" }
           end
+
+          success
         end && break # break out of loop when successful
       end
 
