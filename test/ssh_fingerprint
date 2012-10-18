@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require_relative "../lib/ferret"
+
+bash(name: "ssh-invalid-fingerprint", status: 256, stdin: <<'EOF')
+  ssh git@heroku.com -C "git-receive-pack '/app.git'"
+EOF
