@@ -26,7 +26,7 @@ class Hash
 end
 
 def bash(opts={})
-  opts.rmerge!(name: "bash", retry: 1, stdin: "false", timeout: 180)
+  opts.rmerge!(name: "bash", retry: 1, status: 0, stdin: "false", timeout: 180)
 
   begin
     Timeout.timeout(opts[:timeout]) do
@@ -46,7 +46,7 @@ def bash(opts={})
           Process.wait(pid)
           w1.close
 
-          if $?.to_i == 0
+          if $?.to_i == opts[:status]
             log fn: opts[:name], i: i, at: "#{opts[:name]}-success", status: $?.to_i, measure: true
             success = true
           else
