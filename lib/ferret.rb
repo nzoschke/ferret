@@ -14,8 +14,10 @@ $logger           ||= IO.popen("logger", "w")
 
 trap("EXIT") do
   log fn: :exit
-  Process.kill("KILL", $logger.pid) if $logger.pid
-  Process.wait($logger.pid)
+  if $logger.pid
+    Process.kill("KILL", $logger.pid)
+    Process.wait($logger.pid)
+  end
   FileUtils.rm_rf ENV["TEMP_DIR"]
 end
 
