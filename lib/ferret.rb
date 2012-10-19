@@ -3,6 +3,8 @@ require "securerandom"
 require "timeout"
 require "tmpdir"
 
+ENV["FERRET_APP"] ||= "ferretapp"
+ENV["FERRET_DIR"] ||= File.expand_path(File.join(__FILE__, "..", ".."))
 ENV["ORG"]        ||= "ferret"
 ENV["TARGET_APP"] ||= "#{ENV["ORG"]}-#{File.basename($0, File.extname($0)).gsub(/_/, '-')}" # e.g. ferret-git-push
 ENV["TEMP_DIR"]   ||= Dir.mktmpdir
