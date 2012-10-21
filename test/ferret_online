@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+require "minitest/autorun"
+require "stringio"
+require "tmpdir"
+
+ENV["XID"]  = "deadbeef"
+
+$logdevs = [StringIO.new]
+
+require_relative "../lib/ferret"
+
+class TestFerretOnline < MiniTest::Unit::TestCase
+  def setup
+    ENV["TEMP_DIR"] = Dir.mktmpdir
+    $logdevs[0].rewind
+    $logdevs[0].truncate(0)
+  end
+
+  def logs
+    $logdevs[0].rewind
+    $logdevs[0].read.gsub(/elapsed=[0-9.]+/, "elapsed=X")
+  end
+
+  def test_bash_heroku_list
+    bash(name: "list", stdin: <<-'EOF')
+      heroku list
+    EOF
+
+    assert_equal logs, <<EOF
+app=ferret-ferret-online xid=deadbeef fn=list i=0 at=enter
+app=ferret-ferret-online xid=deadbeef fn=list i=0 at=list-success status=0 measure=true
+app=ferret-ferret-online xid=deadbeef fn=list i=0 at=return elapsed=X measure=true
+EOF
+  end
+end

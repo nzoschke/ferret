@@ -9,7 +9,7 @@ $logdevs = [StringIO.new]
 
 require_relative "../lib/ferret"
 
-class TestMeme < MiniTest::Unit::TestCase
+class TestFerret < MiniTest::Unit::TestCase
   def setup
     ENV["TEMP_DIR"] = Dir.mktmpdir
     $logdevs[0].rewind
