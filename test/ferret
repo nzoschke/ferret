@@ -5,21 +5,20 @@ require "tmpdir"
 
 ENV["XID"]  = "deadbeef"
 
-$logdev = StringIO.new
-$logger = StringIO.new
+$logdevs = [StringIO.new]
 
 require_relative "../lib/ferret"
 
 class TestMeme < MiniTest::Unit::TestCase
   def setup
     ENV["TEMP_DIR"] = Dir.mktmpdir
-    $logdev.rewind
-    $logdev.truncate(0)
+    $logdevs[0].rewind
+    $logdevs[0].truncate(0)
   end
 
   def logs
-    $logdev.rewind
-    $logdev.read.gsub(/elapsed=[0-9.]+/, "elapsed=X")
+    $logdevs[0].rewind
+    $logdevs[0].read.gsub(/elapsed=[0-9.]+/, "elapsed=X")
   end
 
   def test_bash_true

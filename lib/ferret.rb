@@ -11,14 +11,15 @@ ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
 
 $log_prefix       ||= { app: ENV["TARGET_APP"], xid: ENV["XID"] }
-$logdev           ||= $stdout
-$logger           ||= IO.popen("logger", "w")
+$logdevs          ||= [$stdout, IO.popen("logger", "w")]
 
 trap("EXIT") do
   log fn: :exit
-  if $logger.pid
-    Process.kill("KILL", $logger.pid)
-    Process.wait($logger.pid)
+  $logdevs.each do |logdev|
+    if logdev.pid
+      Process.kill("KILL", logdev.pid)
+      Process.wait(logdev.pid)
+    end
   end
   FileUtils.rm_rf ENV["TEMP_DIR"]
 end
@@ -98,5 +99,5 @@ def log(data)
     s << [tup.first, tup.last].join("=") << " "
   end
 
-  [$logdev, $logger].each { |l| l << out.strip + "\n" }
+  $logdevs.each { |l| l << out.strip + "\n" }
 end
