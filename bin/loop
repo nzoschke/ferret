@@ -1,5 +1,5 @@
 #!/bin/bash
 
-SLEEP=${SLEEP:-5}
+SLEEP=${SLEEP:-30}
 
 while true; do "$@"; sleep $SLEEP; done
