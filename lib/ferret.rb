@@ -15,13 +15,18 @@ $logdevs          ||= [$stdout, IO.popen("logger", "w")]
 
 trap("EXIT") do
   log fn: :exit
-  $logdevs.each do |logdev|
-    if logdev.pid
-      Process.kill("KILL", logdev.pid)
-      Process.wait(logdev.pid)
-    end
-  end
+  $logdevs.each { |logdev| kill(logdev.pid) }
   FileUtils.rm_rf ENV["TEMP_DIR"]
+end
+
+def kill(pid)
+  return if !pid
+  begin
+    Process.kill("KILL", pid)
+    Process.wait(pid)
+  rescue Errno::ESRCH, Errno::ECHILD
+    log fn: :kill, pid: pid, at: :error
+  end
 end
 
 class Hash
@@ -43,12 +48,12 @@ def bash(opts={})
           r0, w0 = IO.pipe
           r1, w1 = IO.pipe
 
-          pid = Process.spawn(["bash", "-s"], chdir: ENV["TEMP_DIR"], in: r0, out: w1, err: w1)
+          $pid = Process.spawn(["bash", "-s"], chdir: ENV["TEMP_DIR"], in: r0, out: w1, err: w1)
 
           w0.write(opts[:stdin])
           r0.close; w0.close
 
-          Process.wait(pid)
+          Process.wait($pid)
           w1.close
 
           status = $?.exitstatus
@@ -71,8 +76,9 @@ def bash(opts={})
 
       success || exit(1)
     end
-  rescue Timeout::Error => e
-    log fn: opts[:name], at: :timeout
+  rescue Timeout::Error
+    log fn: opts[:name], at: :timeout, elapsed: opts[:timeout]
+    kill($pid)
     exit(2)
   end
 end
