@@ -48,7 +48,7 @@ def bash(opts={})
           r0, w0 = IO.pipe
           r1, w1 = IO.pipe
 
-          $pid = Process.spawn(["bash", "-s"], chdir: ENV["TEMP_DIR"], in: r0, out: w1, err: w1)
+          $pid = Process.spawn("bash", "--noprofile", "-s", chdir: ENV["TEMP_DIR"], in: r0, out: w1, err: w1)
 
           w0.write(opts[:stdin])
           r0.close; w0.close
