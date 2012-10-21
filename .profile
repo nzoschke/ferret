@@ -1,12 +1,16 @@
 #!/bin/bash
 
-# tests run in a tmp directory, hard code /app in environment for `heroku` to work
-export GEM_PATH=/app/vendor/bundle/ruby/1.9.1
-export PATH=/app/bin:/app/vendor/bundle/ruby/1.9.1/bin:/usr/local/bin:/usr/bin:/bin
+[ -n "$APP" ]            || { echo "error: APP required"; exit 1; }
+[ -n "$HEROKU_API_KEY" ] || { echo "error: HEROKU_API_KEY required"; exit 1; }
 
 echo "setting up ~/.ssh"
-
 mkdir -p $HOME/.ssh
+
+if [ ! -f $HOME/.ssh/id_rsa ]; then
+  ssh-keygen -f $HOME/.ssh/id_rsa -N "" -t rsa
+  heroku keys:add   --app $APP
+  heroku config:set --app $APP SSH_PRIVATE_KEY="$(< $HOME/.ssh/id_rsa)" SSH_PUBLIC_KEY="$(< $HOME/.ssh/id_rsa.pub)"
+fi
 
 cat >$HOME/.ssh/config <<EOF
 StrictHostKeyChecking no

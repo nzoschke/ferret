@@ -23,9 +23,9 @@ $ heroku config:set                                                       \
 # Transfer the app to the "ferret" org
 $ heroku manager:transfer --to ferret
 
-# Push the code and run the setup script on the platform to generate and save SSH keys
-$ git push heroku master
-$ heroku run bin/setup
+# Build and release the code, then run the tests
+$ heroku build -b https://github.com/nzoschke/buildpack-ferret.git -r $APP
+$ heroku run "test/ferret; test/ferret_online"
 ```
 
 ## Local Run
