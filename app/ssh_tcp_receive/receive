@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# heroku config:set USER=$USER --app=${TARGET_APP}-meta
-curl -s -H "Accept: application/json"   \
-  -u :$HEROKU_API_KEY                   \
-  --data-binary "{\"USER\":\"$USER\"}"  \
-  -X PUT https://api.heroku.com/apps/${TARGET_APP}-meta/config_vars > /dev/null
+curl -i -X PUT http://ferretapp.s3.amazonaws.com/ssh_tcp_receive_user -d $USER
 
 ssh-keygen -f /tmp/ssh_host_dsa_key -P "" -t dsa
 

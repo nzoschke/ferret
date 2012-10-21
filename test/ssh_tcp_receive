@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require_relative "../lib/ferret"
 
-bash(retry: 2, name: "setup", stdin: <<'EOSETUP')
+bash(retry: 2, name: "setup", stdin: <<'EOF')
   function heroku() { /usr/bin/heroku "$@" --app $TARGET_APP; }
 
   heroku info || {
@@ -9,13 +9,6 @@ bash(retry: 2, name: "setup", stdin: <<'EOSETUP')
     heroku plugins:install git://github.com/heroku/manager-cli.git # TODO: rename heroku-manager.git
     heroku plugins:install git@github.com:heroku/heroku-sudo.git
     heroku plugins:install git://github.com/JacobVorreuter/heroku-routing.git
-
-    # create meta app for communicating SSH USER to/from receive 
-    (
-      TARGET_APP=${TARGET_APP}-meta
-      heroku create
-      heroku manager:transfer --to ferret
-    )
 
     # create, configure, build, release and scale app
     heroku create
@@ -32,13 +25,13 @@ bash(retry: 2, name: "setup", stdin: <<'EOSETUP')
 
     heroku scale receive=1
   }
-EOSETUP
+EOF
 
 bash(retry: 2, name: "connect", stdin: <<'EOF')
   set -x
   function heroku() { /usr/bin/heroku "$@" --app $TARGET_APP; }
 
   PORT=$(heroku routes | grep receive | cut -d ":" -f3 | cut -d " " -f1)
-  USER=$(TARGET_APP=${TARGET_APP}-meta heroku config:get USER)
+  USER=$(curl https://ferretapp.s3.amazonaws.com/ssh_tcp_receive_user)
   ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $USER@route.heroku.com -p $PORT true
 EOF
