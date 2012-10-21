@@ -127,4 +127,17 @@ app=ferret-ferret xid=deadbeef fn=grep i=0 at=grep-success status=1 measure=true
 app=ferret-ferret xid=deadbeef fn=grep i=0 at=return elapsed=X measure=true
 EOF
   end
+
+  def test_timeout
+    assert_raises(SystemExit) do
+      bash(name: "timeout", timeout: 0.01, stdin: <<-'EOF')
+        sleep 2
+      EOF
+    end
+
+    assert_equal logs, <<EOF
+app=ferret-ferret xid=deadbeef fn=timeout i=0 at=enter
+app=ferret-ferret xid=deadbeef fn=timeout at=timeout elapsed=X
+EOF
+  end
 end
