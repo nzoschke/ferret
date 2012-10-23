@@ -58,7 +58,7 @@ def bash(opts={})
           if success
             log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.success"
           else
-            log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.error"
+            log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.failure"
             out.each_line { |l| log fn: opts[:name], i: i, at: :error, out: "'#{l.strip}'" }
           end
 
