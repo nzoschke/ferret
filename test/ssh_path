@@ -2,6 +2,6 @@
 
 require_relative "../lib/ferret"
 
-bash(name: "ssh-invalid-path", pattern: / !/, status: nil, stdin: <<'EOF')
+bash(name: :invalid, pattern: / !/, status: nil, stdin: <<'EOF')
   ssh git@heroku.com true
 EOF

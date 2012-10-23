@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require_relative "../lib/ferret"
 
-bash(retry: 2, name: "setup", stdin: <<'EOF')
+bash(retry: 2, name: :setup, stdin: <<'EOF')
   function heroku() { /usr/bin/heroku "$@" --app $TARGET_APP; }
 
   heroku info || {
@@ -27,7 +27,7 @@ bash(retry: 2, name: "setup", stdin: <<'EOF')
   }
 EOF
 
-bash(retry: 2, name: "connect", stdin: <<'EOF')
+bash(retry: 2, name: :connect, stdin: <<'EOF')
   set -x
   function heroku() { /usr/bin/heroku "$@" --app $TARGET_APP; }
 

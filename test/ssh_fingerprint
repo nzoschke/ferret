@@ -2,6 +2,6 @@
 
 require_relative "../lib/ferret"
 
-bash(name: "ssh-invalid-fingerprint", pattern: /fingerprint/, status: nil, stdin: <<'EOF')
+bash(name: :invalid, pattern: /fingerprint/, status: nil, stdin: <<'EOF')
   ssh git@heroku.com "git-receive-pack 'blog.git'"
 EOF

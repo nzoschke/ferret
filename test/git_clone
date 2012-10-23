@@ -2,7 +2,7 @@
 
 require_relative "../lib/ferret"
 
-bash(retry: 2, name: "heroku-info-create", stdin: <<'EOF')
+bash(retry: 2, name: :heroku_info_create, stdin: <<'EOF')
   heroku info --app $TARGET_APP || {
     heroku create $TARGET_APP                                             \
       && heroku plugins:install https://github.com/heroku/manager-cli.git \
@@ -10,7 +10,7 @@ bash(retry: 2, name: "heroku-info-create", stdin: <<'EOF')
   }
 EOF
 
-bash(retry: 2, name: "clone", pattern: /cloned an empty repository/, stdin: <<'EOF')
+bash(retry: 2, name: :clone, pattern: /cloned an empty repository/, stdin: <<'EOF')
   rm -rf ./app
   git clone git@heroku.com:$TARGET_APP.git ./app
 EOF

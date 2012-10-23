@@ -3,7 +3,7 @@ require_relative "test_helper"
 
 class TestFerretOnline < TestBase
   def test_bash_heroku_list
-    bash(name: "list", stdin: <<-'EOF')
+    bash(name: :list, stdin: <<-'EOF')
       heroku list
     EOF
 
