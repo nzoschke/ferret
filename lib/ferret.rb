@@ -34,7 +34,7 @@ def bash(opts={})
       success = nil
 
       opts[:retry].times do |i|
-        log(fn: opts[:name], i: i, measure: true) do
+        log(fn: opts[:name], i: i, measure: "#{opts[:name]}.time") do
 
           r0, w0 = IO.pipe
           r1, w1 = IO.pipe
@@ -56,9 +56,9 @@ def bash(opts={})
           success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
 
           if success
-            log fn: opts[:name], i: i, at: "#{opts[:name]}-success", status: status, measure: true
+            log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.success"
           else
-            log fn: opts[:name], i: i, at: "#{opts[:name]}-error",   status: status, measure: true
+            log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.error"
             out.each_line { |l| log fn: opts[:name], i: i, at: :error, out: "'#{l.strip}'" }
           end
 
@@ -69,7 +69,7 @@ def bash(opts={})
       success || exit(1)
     end
   rescue Timeout::Error
-    log fn: opts[:name], at: :timeout, elapsed: opts[:timeout]
+    log fn: opts[:name], at: :timeout, val: opts[:timeout], unit: :s
     Process.kill("INT", -Process.getpgid(opts[:pid]))
     Process.wait(opts[:pid])
     exit(2)
@@ -87,7 +87,7 @@ def log(data)
     start = Time.now
     result = yield
 
-    data.merge!(at: :return, elapsed: Time.now - start)
+    data.merge!(at: :return, val: Time.now - start, unit: :s)
     data.merge!(measure: m) if m && result # only measure if block doesn't fail
     log data
 
