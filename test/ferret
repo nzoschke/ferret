@@ -109,8 +109,8 @@ EOF
 
     assert_equal logs, <<EOF
 app=ferret-ferret xid=deadbeef fn=grep i=0 at=enter
+app=ferret-ferret xid=deadbeef fn=grep i=0 at=failure out='hello'
 app=ferret-ferret xid=deadbeef fn=grep i=0 status=0 measure=grep.failure
-app=ferret-ferret xid=deadbeef fn=grep i=0 at=error out='hello'
 app=ferret-ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s
 EOF
   end

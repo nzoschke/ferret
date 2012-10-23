@@ -31,42 +31,41 @@ def bash(opts={})
 
   begin
     Timeout.timeout(opts[:timeout]) do
-      success = nil
-
       opts[:retry].times do |i|
-        log(fn: opts[:name], i: i, measure: "#{opts[:name]}.time") do
+        start = Time.now
+        log fn: opts[:name], i: i, at: :enter
 
-          r0, w0 = IO.pipe
-          r1, w1 = IO.pipe
+        r0, w0 = IO.pipe
+        r1, w1 = IO.pipe
 
-          opts[:pid] = Process.spawn("bash", "--noprofile", "-s", chdir: ENV["TEMP_DIR"], pgroup: 0, in: r0, out: w1, err: w1)
+        opts[:pid] = Process.spawn("bash", "--noprofile", "-s", chdir: ENV["TEMP_DIR"], pgroup: 0, in: r0, out: w1, err: w1)
 
-          w0.write(opts[:stdin])
-          r0.close
-          w0.close
+        w0.write(opts[:stdin])
+        r0.close
+        w0.close
 
-          Process.wait(opts[:pid])
-          w1.close
+        Process.wait(opts[:pid])
+        w1.close
 
-          status = $?.exitstatus
-          out    = r1.read
+        status = $?.exitstatus
+        out    = r1.read
 
-          success   = true
-          success &&= status == opts[:status]   if opts[:status]
-          success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
+        success   = true
+        success &&= status == opts[:status]   if opts[:status]
+        success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
 
-          if success
-            log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.success"
-          else
-            log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.failure"
-            out.each_line { |l| log fn: opts[:name], i: i, at: :error, out: "'#{l.strip}'" }
-          end
-
-          success
-        end && break # break out of loop when successful
+        if success
+          log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.success"
+          log fn: opts[:name], i: i, at: :return, val: Time.now - start, unit: :s, measure: "#{opts[:name]}.time"
+          return success # break out of retry loop
+        else
+          out.each_line { |l| log fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
+          log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.failure"
+          log fn: opts[:name], i: i, at: :return, val: Time.now - start, unit: :s
+        end
       end
 
-      success || exit(1)
+      exit(1)
     end
   rescue Timeout::Error
     log fn: opts[:name], at: :timeout, val: opts[:timeout], unit: :s
@@ -78,21 +77,6 @@ end
 
 def log(data)
   data.rmerge! $log_prefix
-
-  if block_given?
-    m = data.delete(:measure)
-    data.merge!(at: :enter)
-    log data
-
-    start = Time.now
-    result = yield
-
-    data.merge!(at: :return, val: Time.now - start, unit: :s)
-    data.merge!(measure: m) if m && result # only measure if block doesn't fail
-    log data
-
-    return result
-  end
 
   data.reduce(out=String.new) do |s, tup|
     s << [tup.first, tup.last].join("=") << " "
