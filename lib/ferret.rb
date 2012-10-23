@@ -6,11 +6,12 @@ require "tmpdir"
 ENV["FERRET_APP"] ||= "ferretapp"
 ENV["FERRET_DIR"] ||= File.expand_path(File.join(__FILE__, "..", ".."))
 ENV["ORG"]        ||= "ferret"
-ENV["TARGET_APP"] ||= "#{ENV["ORG"]}-#{File.basename($0, File.extname($0)).gsub(/_/, '-')}" # e.g. ferret-git-push
+ENV["NAME"]       ||= File.basename($0, File.extname($0))           # e.g. git_push
+ENV["TARGET_APP"] ||= "#{ENV["ORG"]}-#{ENV["NAME"]}".gsub(/_/, '-') # e.g. ferret-git-push
 ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
 
-$log_prefix       ||= { app: ENV["TARGET_APP"], xid: ENV["XID"] }
+$log_prefix       ||= { app: "#{ENV["ORG"]}.#{ENV["NAME"]}", xid: ENV["XID"] }
 $logdevs          ||= [$stdout, IO.popen("logger", "w")]
 
 trap("EXIT") do

@@ -2,7 +2,8 @@ require "minitest/autorun"
 require "stringio"
 require "tmpdir"
 
-ENV["XID"]  = "deadbeef"
+ENV["ORG"] = "ferret-test"
+ENV["XID"] = "deadbeef"
 
 $logdevs = [StringIO.new]
 

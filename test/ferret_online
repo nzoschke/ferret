@@ -8,9 +8,9 @@ class TestFerretOnline < TestBase
     EOF
 
     assert_equal logs, <<EOF
-app=ferret-ferret-online xid=deadbeef fn=list i=0 at=enter
-app=ferret-ferret-online xid=deadbeef fn=list i=0 status=0 measure=list.success
-app=ferret-ferret-online xid=deadbeef fn=list i=0 at=return val=X unit=s measure=list.time
+app=ferret-test.ferret_online xid=deadbeef fn=list i=0 at=enter
+app=ferret-test.ferret_online xid=deadbeef fn=list i=0 status=0 measure=list.success
+app=ferret-test.ferret_online xid=deadbeef fn=list i=0 at=return val=X unit=s measure=list.time
 EOF
   end
 end

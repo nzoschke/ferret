@@ -8,9 +8,9 @@ class TestFerret < TestBase
     EOF
 
     assert_equal logs, <<EOF
-app=ferret-ferret xid=deadbeef fn=true i=0 at=enter
-app=ferret-ferret xid=deadbeef fn=true i=0 status=0 measure=true.success
-app=ferret-ferret xid=deadbeef fn=true i=0 at=return val=X unit=s measure=true.time
+app=ferret-test.ferret xid=deadbeef fn=true i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=true i=0 status=0 measure=true.success
+app=ferret-test.ferret xid=deadbeef fn=true i=0 at=return val=X unit=s measure=true.time
 EOF
   end
 
@@ -22,9 +22,9 @@ EOF
     end
 
     assert_equal logs, <<EOF
-app=ferret-ferret xid=deadbeef fn=false i=0 at=enter
-app=ferret-ferret xid=deadbeef fn=false i=0 status=1 measure=false.failure
-app=ferret-ferret xid=deadbeef fn=false i=0 at=return val=X unit=s
+app=ferret-test.ferret xid=deadbeef fn=false i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=false i=0 status=1 measure=false.failure
+app=ferret-test.ferret xid=deadbeef fn=false i=0 at=return val=X unit=s
 EOF
   end
 
@@ -36,12 +36,12 @@ EOF
     end
 
     assert_equal logs, <<EOF
-app=ferret-ferret xid=deadbeef fn=false i=0 at=enter
-app=ferret-ferret xid=deadbeef fn=false i=0 status=1 measure=false.failure
-app=ferret-ferret xid=deadbeef fn=false i=0 at=return val=X unit=s
-app=ferret-ferret xid=deadbeef fn=false i=1 at=enter
-app=ferret-ferret xid=deadbeef fn=false i=1 status=1 measure=false.failure
-app=ferret-ferret xid=deadbeef fn=false i=1 at=return val=X unit=s
+app=ferret-test.ferret xid=deadbeef fn=false i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=false i=0 status=1 measure=false.failure
+app=ferret-test.ferret xid=deadbeef fn=false i=0 at=return val=X unit=s
+app=ferret-test.ferret xid=deadbeef fn=false i=1 at=enter
+app=ferret-test.ferret xid=deadbeef fn=false i=1 status=1 measure=false.failure
+app=ferret-test.ferret xid=deadbeef fn=false i=1 at=return val=X unit=s
 EOF
   end
 
@@ -51,9 +51,9 @@ EOF
     EOF
 
     assert_equal logs, <<EOF
-app=ferret-ferret xid=deadbeef fn=nonzero i=0 at=enter
-app=ferret-ferret xid=deadbeef fn=nonzero i=0 status=128 measure=nonzero.success
-app=ferret-ferret xid=deadbeef fn=nonzero i=0 at=return val=X unit=s measure=nonzero.time
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 status=128 measure=nonzero.success
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=return val=X unit=s measure=nonzero.time
 EOF
   end
 
@@ -63,9 +63,9 @@ EOF
     EOF
 
     assert_equal logs, <<EOF
-app=ferret-ferret xid=deadbeef fn=nonzero i=0 at=enter
-app=ferret-ferret xid=deadbeef fn=nonzero i=0 status=128 measure=nonzero.success
-app=ferret-ferret xid=deadbeef fn=nonzero i=0 at=return val=X unit=s measure=nonzero.time
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 status=128 measure=nonzero.success
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=return val=X unit=s measure=nonzero.time
 EOF
   end
 
@@ -75,9 +75,9 @@ EOF
     EOF
 
     assert_equal logs, <<EOF
-app=ferret-ferret xid=deadbeef fn=grep i=0 at=enter
-app=ferret-ferret xid=deadbeef fn=grep i=0 status=0 measure=grep.success
-app=ferret-ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s measure=grep.time
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=0 measure=grep.success
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s measure=grep.time
 EOF
   end
 
@@ -89,10 +89,10 @@ EOF
     end
 
     assert_equal logs, <<EOF
-app=ferret-ferret xid=deadbeef fn=grep i=0 at=enter
-app=ferret-ferret xid=deadbeef fn=grep i=0 at=failure out='hello'
-app=ferret-ferret xid=deadbeef fn=grep i=0 status=0 measure=grep.failure
-app=ferret-ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=failure out='hello'
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=0 measure=grep.failure
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s
 EOF
   end
 
@@ -103,9 +103,9 @@ EOF
     EOF
 
     assert_equal logs, <<EOF
-app=ferret-ferret xid=deadbeef fn=grep i=0 at=enter
-app=ferret-ferret xid=deadbeef fn=grep i=0 status=1 measure=grep.success
-app=ferret-ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s measure=grep.time
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=1 measure=grep.success
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s measure=grep.time
 EOF
   end
 
@@ -117,8 +117,8 @@ EOF
     end
 
     assert_equal logs, <<EOF
-app=ferret-ferret xid=deadbeef fn=timeout i=0 at=enter
-app=ferret-ferret xid=deadbeef fn=timeout at=timeout val=X unit=s
+app=ferret-test.ferret xid=deadbeef fn=timeout i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=timeout at=timeout val=X unit=s
 EOF
   end
 end
