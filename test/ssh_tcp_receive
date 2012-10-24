@@ -13,7 +13,6 @@ bash(retry: 2, name: :setup, stdin: <<'EOF')
     # create, configure, build, release and scale app
     heroku create
 
-    heroku config:set HEROKU_API_KEY=$(TARGET_APP=$FERRET_APP heroku config:get HEROKU_API_KEY) TARGET_APP=$TARGET_APP
     heroku sudo flags:add   compile-cluster
     heroku sudo labs:enable dot-profile-d
     heroku manager:transfer --to ferret
@@ -21,7 +20,7 @@ bash(retry: 2, name: :setup, stdin: <<'EOF')
     ROUTE=$(heroku routes:create | tail -1)
     heroku routes:attach $ROUTE receive
 
-    heroku build -r $TARGET_APP $FERRET_DIR/app/ssh_tcp_receive
+    heroku build -b https://github.com/nzoschke/buildpack-ferret.git -r $TARGET_APP $FERRET_DIR/app/ssh_tcp_receive
 
     heroku scale receive=1
   }
