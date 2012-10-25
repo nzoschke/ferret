@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+
+require_relative "../lib/ferret"
+
+bash(name: :dd, stdin: <<'EOF')
+  if [ ! -f /tmp/o ]; then
+    if [ "$(uname)" = "Darwin" ]; then
+      dd if=/dev/zero of=/tmp/o bs=10000000 count=2
+    else
+      dd if=/dev/zero of=/tmp/o bs=10M count=2 oflag=direct,sync
+    fi
+  fi
+EOF
+
+bash(name: :curl, stdin: <<'EOF')
+  curl -i -X PUT http://ferretapp.s3.amazonaws.com/perf_network --data-binary @/tmp/o
+EOF
