@@ -2,7 +2,7 @@
 
 require_relative "../lib/ferret"
 
-bash(name: :tmp, stdin: <<'EOF')
+bash(name: :dd, stdin: <<'EOF')
   rm -f /tmp/o
   if [ "$(uname)" = "Darwin" ]; then
     dd if=/dev/zero of=/tmp/o bs=10000000 count=20
