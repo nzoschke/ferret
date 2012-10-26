@@ -1,0 +1,42 @@
+#!/usr/bin/env ruby
+
+require "cgi"
+require "librato/metrics"
+require "uri"
+
+require_relative "../lib/ferret"
+
+uri = URI.parse(ENV["LIBRATO_API_URL"])
+Librato::Metrics.authenticate CGI.unescape(uri.user), uri.password
+
+def sum(metric, duration)
+  begin
+    m = Librato::Metrics.fetch(metric,
+      start_time: Time.now - duration,
+      summarize_time: true,
+      summarize_sources: true
+    )
+    m.empty? ? 0 : m["all"][0]["sum"]
+  rescue Librato::Metrics::NotFound
+    0
+  end
+end
+
+def avail(metric, duration)
+  s = sum("#{metric}.success.count", duration)
+  f = sum("#{metric}.failure.count", duration)
+  (s - f).to_f / s * 100
+end
+
+metrics = [
+  ["#{ENV["ORG"]}.git_clone.clone",        600],
+  ["#{ENV["ORG"]}.git_clone_bamboo.clone", 600],
+  ["#{ENV["ORG"]}.git_clone_elb.clone",    600],
+  ["#{ENV["ORG"]}.exec_converge.poll",     3600],
+  ["#{ENV["ORG"]}.exec_run.run",           600],
+]
+
+metrics.each do |m,i|
+  fn = m.split(".")[1]
+  log(val: avail(m,i), measure: "#{fn}.avail")
+end
