@@ -1,6 +1,6 @@
 # Ferret
 
-Ferret is a set of canary apps and processes:
+Ferret is a framework to set up canary apps and test processes:
 
 ```
 Heroku Org          ferret
@@ -11,8 +11,8 @@ Heroku Org          ferret
   Target App          ferret-convergence
 ```
 
-The Control App process logs are drained to l2met, where service availability
-and service time can be calculated and visualized via Librato Metrics.
+The Control App test process logs are drained to l2met, where service availability and service time can be calculated and visualized via Librato 
+Metrics.
 
 ## Setup
 
@@ -22,11 +22,6 @@ $ export                                                                  \
     UNPRIVILEGED_HEROKU_API_KEY=deadbeef87a9b10d49ab5036216c41b7f8cc3633  \
     UNPRIVILEGED_GMAIL_USER=heroku.ferret@gmail.com:deadbeef84c277fa
 
-# Add the Heroku account to the "ferret" Heroku Manager org
-$ export ORG=ferret
-$ heroku manager:add_user                                                 \
-    --org $ORG --user ${UNPRIVILEGED_GMAIL_USER%:*} --role admin
-
 # Create an app and add the API keys
 $ export APP=ferretapp
 $ heroku create $APP
@@ -35,7 +30,10 @@ $ heroku config:set                                                       \
     GMAIL_USER=$UNPRIVILEGED_GMAIL_USER                                   \
     HEROKU_API_KEY=$UNPRIVILEGED_HEROKU_API_KEY
 
-# Transfer the app to the "ferret" org
+# Add the account and transfer the app to the "ferret" Heroku Manager org
+$ export ORG=ferret
+$ heroku manager:add_user                                                 \
+    --org $ORG --user ${UNPRIVILEGED_GMAIL_USER%:*} --role admin
 $ heroku manager:transfer --to $ORG
 
 # Build and release the code, then run the tests
@@ -80,7 +78,7 @@ $ heroku drains:add https://drain.l2met.net/consumers/36f8e609-df04-4da2-8630-86
 Ferret is a simple framework for applying the canary pattern for Heroku kernel services. Much thought is given on how to measure properties of services in isolation.
 
 Ferret *does not* implement complex platform integration tests, though these 
-are possible to implement with the framework.
+would be easy to build with the framework.
 
 ## Platform Features
 
@@ -94,3 +92,11 @@ discoverable, and configuration and maintenance free:
 * Custom Buildpack (https://github.com/nzoschke/buildpack-ferret)
 * Heroku Toolbelt
 * S3 public write bucket with expiration
+
+## Todo
+
+* HTTP canaries
+* Build canaries
+* Tooling around Heroku setup/teardown
+* Tooling around Librato configuration
+* Warning / Alerting
