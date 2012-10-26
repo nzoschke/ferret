@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+require_relative "../lib/ferret"
+
+bash(retry: 2, name: :setup, stdin: <<'EOF')
+  function heroku() { $(which heroku) "$@" --app $TARGET_APP; }
+
+  heroku info || {
+    heroku plugins:install https://github.com/ddollar/heroku-anvil
+    heroku plugins:install git://github.com/heroku/manager-cli.git
+
+    # create, configure, build, release and scale app
+    heroku create
+    heroku manager:transfer --to ENV["ORG"]
+    heroku build -r $TARGET_APP $FERRET_DIR/app/exec_converge
+    heroku scale crasher=1
+  }
+EOF
+
+bash(name: :poll, timeout: 3900, stdin: <<'EOSH')
+  # poll for change in up_at, every 10s for 360 intervals (~60 min)
+  set -x
+  UP_AT=$(curl -s http://ferretapp.s3.amazonaws.com/exec_converge_up_at)
+  for i in {1..360}; do
+    [ "$UP_AT" = "$(curl -s https://ferretapp.s3.amazonaws.com/exec_converge_up_at)" ] || exit 0
+    sleep 10
+  done
+  exit 1
+EOSH
