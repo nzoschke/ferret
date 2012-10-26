@@ -10,7 +10,7 @@ bash(retry: 2, name: :setup, stdin: <<'EOF')
 
     # create, configure, build, release and scale app
     heroku create
-    heroku manager:transfer --to ENV["ORG"]
+    heroku manager:transfer --to $ORG
     heroku build -r $TARGET_APP $FERRET_DIR/app/exec_converge
     heroku scale crasher=1
   }
