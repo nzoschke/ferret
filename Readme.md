@@ -1,16 +1,31 @@
 # Ferret
 
+Ferret is a set of canary apps and processes:
+
+```
+Heroku Org          ferret
+  Control App         ferretapp
+    Test Process        test/git_clone
+    Test Process        test/convergence
+  Target App          ferret-git-clone
+  Target App          ferret-convergence
+```
+
+The Control App process logs are drained to l2met, where service availability
+and service time can be calculated and visualized via Librato Metrics.
+
 ## Setup
 
 ```sh
-# Create a disposable GMail account, sign him up for Heroku, and save the keys
+# Create an unpriveledged GMail account, sign up for Heroku, and save the keys
 $ export                                                                  \
     UNPRIVILEGED_HEROKU_API_KEY=deadbeef87a9b10d49ab5036216c41b7f8cc3633  \
     UNPRIVILEGED_GMAIL_USER=heroku.ferret@gmail.com:deadbeef84c277fa
 
 # Add the Heroku account to the "ferret" Heroku Manager org
+$ export ORG=ferret
 $ heroku manager:add_user                                                 \
-    --org ferret --user ${UNPRIVILEGED_GMAIL_USER%:*} --role admin
+    --org $ORG --user ${UNPRIVILEGED_GMAIL_USER%:*} --role admin
 
 # Create an app and add the API keys
 $ export APP=ferretapp
@@ -21,7 +36,7 @@ $ heroku config:set                                                       \
     HEROKU_API_KEY=$UNPRIVILEGED_HEROKU_API_KEY
 
 # Transfer the app to the "ferret" org
-$ heroku manager:transfer --to ferret
+$ heroku manager:transfer --to $ORG
 
 # Build and release the code, then run the tests
 $ heroku build -b https://github.com/nzoschke/buildpack-ferret.git -r $APP
@@ -31,27 +46,24 @@ $ heroku run "test/ferret; test/ferret_online"
 ## Local Run
 
 ```sh
-$ test/git_push
-app=ferret-git-push xid=e5481d29 fn=heroku-info-create i=0 at=enter 
-app=ferret-git-push xid=e5481d29 fn=heroku-info-create i=0 at=heroku-info-create-success status=0 measure=true 
-app=ferret-git-push xid=e5481d29 fn=heroku-info-create i=0 at=return elapsed=2.488483 measure=true 
-app=ferret-git-push xid=e5481d29 fn=init-commit i=0 at=enter 
-app=ferret-git-push xid=e5481d29 fn=init-commit i=0 at=init-commit-success status=0 measure=true 
-app=ferret-git-push xid=e5481d29 fn=init-commit i=0 at=return elapsed=0.016346 measure=true 
-app=ferret-git-push xid=e5481d29 fn=push i=0 at=enter 
-app=ferret-git-push xid=e5481d29 fn=push i=0 at=push-success status=0 measure=true 
-app=ferret-git-push xid=e5481d29 fn=push i=0 at=return elapsed=32.92235 measure=true 
-app=ferret-git-push xid=e5481d29 fn=exit 
+$ test/git_clone
+app=ferret.git_clone xid=40ff7bbd fn=heroku_info_create i=0 at=enter
+app=ferret.git_clone xid=40ff7bbd fn=heroku_info_create i=0 status=0 measure=heroku_info_create.success
+app=ferret.git_clone xid=40ff7bbd fn=heroku_info_create i=0 at=return val=6.515912 unit=s measure=heroku_info_create.time
+app=ferret.git_clone xid=40ff7bbd fn=clone i=0 at=enter
+app=ferret.git_clone xid=40ff7bbd fn=clone i=0 status=0 measure=clone.success
+app=ferret.git_clone xid=40ff7bbd fn=clone i=0 at=return val=12.826495 unit=s measure=clone.time
+app=ferret.git_clone xid=40ff7bbd fn=exit
 ```
 
 ## Platform Run
 
 ```sh
-$ heroku run git_push
+$ heroku run git_clone
 
 # OR
 
-$ heroku scale git_push=1
+$ heroku scale git_clone=1
 ```
 
 ## Metrics
@@ -62,3 +74,23 @@ Create an account on Librato use it to get a drain on https://www.l2met.net/
 $ heroku sudo passes:add logplex-beta-program
 $ heroku drains:add https://drain.l2met.net/consumers/36f8e609-df04-4da2-8630-86a959f41c68/logs
 ```
+
+## Philosophy
+
+Ferret is a simple framework for applying the canary pattern for Heroku kernel services. Much thought is given on how to measure properties of services in isolation.
+
+Ferret *does not* implement complex platform integration tests, though these 
+are possible to implement with the framework.
+
+## Platform Features
+
+Ferret uses many of the latest features of Heroku to make the tools secure,
+discoverable, and configuration and maintenance free:
+
+* Heroku Manager
+* L2Met
+* Anvil
+* Dot Profile (dot-profile-d feature)
+* Custom Buildpack (https://github.com/nzoschke/buildpack-ferret)
+* Heroku Toolbelt
+* S3 public write bucket with expiration
