@@ -78,6 +78,22 @@ Ferret is a simple framework for applying the canary pattern for Heroku kernel s
 Ferret *does not* implement complex platform integration tests, though these 
 would be easy to build with the framework.
 
+## Test App Development
+
+Simple test processes follow a pattern. See `test/exec_run` as an example.
+
+First, test if the $TARGET_APP already exists, and if not create it and
+transfer it to the $ORG (:setup, using `heroku info || heroku create`).
+
+Next perform some tests on the $TARGET_APP (:run, using `heroku run true`).
+
+The `bash` helper will automatically log a counter for success or failure, as
+well as a value for the time if successful, or logs if a failure. Environment
+variables for $ORG, $TARGET_APP, etc. are pre-set for convenience.
+
+Tests are not limited to `bash` however. See `test/librato` for "tests"
+performed in Ruby, logging custom measurements.
+
 ## Platform Features
 
 Ferret uses many of the latest features of Heroku to make the tools secure,
