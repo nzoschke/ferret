@@ -16,9 +16,9 @@ Metrics.
 
 ## Control App Setup
 
-```sh
-# NOTE: You can bypass this by joining $ORG.
+NOTE: You can bypass this by joining $ORG.
 
+```sh
 # Create an unpriveledged GMail account, sign up for Heroku, and save the keys
 $ export                                                                  \
     UNPRIVILEGED_HEROKU_API_KEY=deadbeef87a9b10d49ab5036216c41b7f8cc3633  \
