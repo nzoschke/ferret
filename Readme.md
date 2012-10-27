@@ -14,9 +14,11 @@ Heroku Org          ferret
 The Control App test process logs are drained to l2met, where service availability and service time can be calculated and visualized via Librato 
 Metrics.
 
-## Setup
+## Control App Setup
 
 ```sh
+# NOTE: You can bypass this by joining $ORG.
+
 # Create an unpriveledged GMail account, sign up for Heroku, and save the keys
 $ export                                                                  \
     UNPRIVILEGED_HEROKU_API_KEY=deadbeef87a9b10d49ab5036216c41b7f8cc3633  \
@@ -39,6 +41,11 @@ $ heroku manager:transfer --to $ORG
 # Build and release the code, then run the tests
 $ heroku build -b https://github.com/nzoschke/buildpack-ferret.git -r $APP
 $ heroku run "test/ferret; test/ferret_online"
+
+# Send metrics to Librato via https://www.l2met.net/
+
+$ heroku sudo passes:add logplex-beta-program
+$ heroku drains:add https://drain.l2met.net/consumers/36f8e609-df04-4da2-8630-86a959f41c68/logs
 ```
 
 ## Local Run
@@ -64,15 +71,6 @@ $ heroku run git_clone
 $ heroku scale git_clone=1
 ```
 
-## Metrics
-
-Create an account on Librato use it to get a drain on https://www.l2met.net/
-
-```sh
-$ heroku sudo passes:add logplex-beta-program
-$ heroku drains:add https://drain.l2met.net/consumers/36f8e609-df04-4da2-8630-86a959f41c68/logs
-```
-
 ## Philosophy
 
 Ferret is a simple framework for applying the canary pattern for Heroku kernel services. Much thought is given on how to measure properties of services in isolation.
@@ -83,15 +81,17 @@ would be easy to build with the framework.
 ## Platform Features
 
 Ferret uses many of the latest features of Heroku to make the tools secure,
-discoverable, and configuration and maintenance free:
+discoverable, configuration free, and maintenance free:
 
-* Heroku Manager
-* L2Met
+* S3
 * Anvil
-* Dot Profile (dot-profile-d feature)
 * Custom Buildpack (https://github.com/nzoschke/buildpack-ferret)
 * Heroku Toolbelt
-* S3 public write bucket with expiration
+* Dot Profile (dot-profile-d feature)
+* Heroku Manager
+* HTTP Log Drains
+* L2Met
+* Librato
 
 ## Todo
 
