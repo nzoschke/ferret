@@ -24,10 +24,17 @@ def sum(metric, duration)
   end
 end
 
+def mean(metric, duration)
+end
+
 def avail(metric, duration)
   s = sum("#{metric}.success.count", duration)
   f = sum("#{metric}.failure.count", duration)
-  (s - f).to_f / s * 100
+  s.to_f / (s + f) * 100
+end
+
+def mean_time(metric, duration)
+  s = sum("#{metric}.success.mean", duration)
 end
 
 metrics = [
