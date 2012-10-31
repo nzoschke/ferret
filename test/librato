@@ -38,11 +38,12 @@ def mean_time(metric, duration)
 end
 
 metrics = [
-  ["#{ENV["ORG"]}.git_clone.clone",        600],
-  ["#{ENV["ORG"]}.git_clone_bamboo.clone", 600],
-  ["#{ENV["ORG"]}.git_clone_elb.clone",    600],
-  ["#{ENV["ORG"]}.exec_converge.poll",     3600],
-  ["#{ENV["ORG"]}.exec_run.run",           600],
+  ["#{ENV["ORG"]}.dashboard_oauth_redirect.redirect", 600],
+  ["#{ENV["ORG"]}.git_clone.clone",                   600],
+  ["#{ENV["ORG"]}.git_clone_bamboo.clone",            600],
+  ["#{ENV["ORG"]}.git_clone_elb.clone",               600],
+  ["#{ENV["ORG"]}.exec_converge.poll",                3600],
+  ["#{ENV["ORG"]}.exec_run.run",                      600],
 ]
 
 metrics.each do |m,i|
