@@ -9,8 +9,8 @@ class TestFerret < TestBase
 
     assert_equal logs, <<EOF
 app=ferret-test.ferret xid=deadbeef fn=true i=0 at=enter
-app=ferret-test.ferret xid=deadbeef fn=true i=0 status=0 measure=true.success
-app=ferret-test.ferret xid=deadbeef fn=true i=0 at=return val=X unit=s measure=true.time
+app=ferret-test.ferret xid=deadbeef fn=true i=0 status=0 measure=ferret-test.ferret.true.success
+app=ferret-test.ferret xid=deadbeef fn=true i=0 at=return val=X unit=s measure=ferret-test.ferret.true.time
 EOF
   end
 
@@ -23,7 +23,7 @@ EOF
 
     assert_equal logs, <<EOF
 app=ferret-test.ferret xid=deadbeef fn=false i=0 at=enter
-app=ferret-test.ferret xid=deadbeef fn=false i=0 status=1 measure=false.failure
+app=ferret-test.ferret xid=deadbeef fn=false i=0 status=1 measure=ferret-test.ferret.false.failure
 app=ferret-test.ferret xid=deadbeef fn=false i=0 at=return val=X unit=s
 EOF
   end
@@ -37,10 +37,10 @@ EOF
 
     assert_equal logs, <<EOF
 app=ferret-test.ferret xid=deadbeef fn=false i=0 at=enter
-app=ferret-test.ferret xid=deadbeef fn=false i=0 status=1 measure=false.failure
+app=ferret-test.ferret xid=deadbeef fn=false i=0 status=1 measure=ferret-test.ferret.false.failure
 app=ferret-test.ferret xid=deadbeef fn=false i=0 at=return val=X unit=s
 app=ferret-test.ferret xid=deadbeef fn=false i=1 at=enter
-app=ferret-test.ferret xid=deadbeef fn=false i=1 status=1 measure=false.failure
+app=ferret-test.ferret xid=deadbeef fn=false i=1 status=1 measure=ferret-test.ferret.false.failure
 app=ferret-test.ferret xid=deadbeef fn=false i=1 at=return val=X unit=s
 EOF
   end
@@ -52,8 +52,8 @@ EOF
 
     assert_equal logs, <<EOF
 app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=enter
-app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 status=128 measure=nonzero.success
-app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=return val=X unit=s measure=nonzero.time
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 status=128 measure=ferret-test.ferret.nonzero.success
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=return val=X unit=s measure=ferret-test.ferret.nonzero.time
 EOF
   end
 
@@ -64,8 +64,8 @@ EOF
 
     assert_equal logs, <<EOF
 app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=enter
-app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 status=128 measure=nonzero.success
-app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=return val=X unit=s measure=nonzero.time
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 status=128 measure=ferret-test.ferret.nonzero.success
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=return val=X unit=s measure=ferret-test.ferret.nonzero.time
 EOF
   end
 
@@ -76,8 +76,8 @@ EOF
 
     assert_equal logs, <<EOF
 app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=enter
-app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=0 measure=grep.success
-app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s measure=grep.time
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=0 measure=ferret-test.ferret.grep.success
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s measure=ferret-test.ferret.grep.time
 EOF
   end
 
@@ -91,7 +91,7 @@ EOF
     assert_equal logs, <<EOF
 app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=enter
 app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=failure out='hello'
-app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=0 measure=grep.failure
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=0 measure=ferret-test.ferret.grep.failure
 app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s
 EOF
   end
@@ -104,8 +104,8 @@ EOF
 
     assert_equal logs, <<EOF
 app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=enter
-app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=1 measure=grep.success
-app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s measure=grep.time
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=1 measure=ferret-test.ferret.grep.success
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=return val=X unit=s measure=ferret-test.ferret.grep.time
 EOF
   end
 

@@ -56,12 +56,12 @@ def bash(opts={})
         success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
 
         if success
-          log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.success"
-          log fn: opts[:name], i: i, at: :return, val: Time.now - start, unit: :s, measure: "#{opts[:name]}.time"
+          log fn: opts[:name], i: i, status: status, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.success"
+          log fn: opts[:name], i: i, at: :return, val: Time.now - start, unit: :s, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.time"
           return success # break out of retry loop
         else
           out.each_line { |l| log fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
-          log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.failure"
+          log fn: opts[:name], i: i, status: status, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.failure"
           log fn: opts[:name], i: i, at: :return, val: Time.now - start, unit: :s
         end
       end
