@@ -113,6 +113,8 @@ discoverable, configuration free, and maintenance free:
 
 * HTTP canaries
 * Build canaries
+* OAuth canary
 * Tooling around Heroku setup/teardown
 * Tooling around Librato configuration
 * Warning / Alerting
+* Measure l2met / librato delay
