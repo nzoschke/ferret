@@ -53,5 +53,5 @@ metrics = [
 
 metrics.each do |m,opts|
   fn = m.split(".")[1]
-  log(val: avail(m,opts), measure: "#{fn}.avail")
+  log(val: avail(m,opts), measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{fn}.avail")
 end
