@@ -4,6 +4,7 @@ exec_run:                 bin/loop test/exec_run
 git_clone:                bin/loop test/git_clone
 git_clone_bamboo:         bin/loop test/git_clone_bamboo
 git_clone_elb:            bin/loop test/git_clone_elb
+git_push_ruby:            bin/loop test/git_push_ruby
 librato:                  bin/loop test/librato
 perf_cpu:                 bin/loop test/perf_cpu
 perf_disk:                bin/loop test/perf_disk
