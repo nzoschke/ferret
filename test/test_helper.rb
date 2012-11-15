@@ -18,6 +18,8 @@ class TestBase < MiniTest::Unit::TestCase
 
   def logs
     $logdevs[0].rewind
-    $logdevs[0].read.gsub(/val=[0-9.]+/, "val=X")
+    #$logdevs[0].read
+    #$logdevs[0].read.gsub(/val=[0-9.]+/, "val=X")
+    $logdevs[0].read.gsub(/val=([0-9]+)\.([0-9]+)/, "val=X.Y") # mask floating point values
   end
 end

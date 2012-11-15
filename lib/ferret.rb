@@ -57,19 +57,26 @@ def bash(opts={})
 
         if success
           log fn: opts[:name], i: i, status: status, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.success"
-          log fn: opts[:name], i: i, at: :return, val: Time.now - start, unit: :s, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.time"
+          log fn: opts[:name], i: i, val: 100, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.uptime"
+          log fn: opts[:name], i: i, at: :return, val: Time.now - start, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.time"
           return success # break out of retry loop
         else
           out.each_line { |l| log fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
-          log fn: opts[:name], i: i, status: status, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.failure"
-          log fn: opts[:name], i: i, at: :return, val: Time.now - start, unit: :s
+          # only measure last failure
+          if i == opts[:retry] - 1
+            log fn: opts[:name], i: i, status: status, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.failure"
+            log fn: opts[:name], i: i, val: 0, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.uptime"
+          else
+            log fn: opts[:name], i: i, status: status
+          end
+          log fn: opts[:name], i: i, at: :return, val: Time.now - start
         end
       end
 
       exit(1)
     end
   rescue Timeout::Error
-    log fn: opts[:name], at: :timeout, val: opts[:timeout], unit: :s
+    log fn: opts[:name], at: :timeout, val: opts[:timeout]
     Process.kill("INT", -Process.getpgid(opts[:pid]))
     Process.wait(opts[:pid])
     exit(2)
