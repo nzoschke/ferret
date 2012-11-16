@@ -47,6 +47,7 @@ metrics = [
   ["#{ENV["ORG"]}.git_clone.clone",                   duration: 600],
   ["#{ENV["ORG"]}.git_clone_bamboo.clone",            duration: 600],
   ["#{ENV["ORG"]}.git_clone_elb.clone",               duration: 600],
+  ["#{ENV["ORG"]}.git_push_ruby.push",                duration: 600],
   ["#{ENV["ORG"]}.exec_converge.poll",                duration: 3600],
   ["#{ENV["ORG"]}.exec_run.run",                      duration: 600],
 ]
