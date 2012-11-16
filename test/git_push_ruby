@@ -42,12 +42,8 @@ EOF
   git commit -m "create app"
 EOSTDIN
 
-bash(retry: 5, name: :reset_repo, stdin: <<'EOSTDIN')
-  heroku plugins:install https://github.com/lstoll/heroku-repo.git
-  heroku repo:reset --app $TARGET_APP
-EOSTDIN
-
 bash(name: :push, pattern: /Launching\.\.\. done/, stdin: <<'EOSTDIN')
   cd ./app
+  git commit --allow-empty -m "empty"
   git push -f git@heroku.com:$TARGET_APP.git master
 EOSTDIN
