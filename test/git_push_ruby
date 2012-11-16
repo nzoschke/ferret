@@ -49,5 +49,5 @@ EOSTDIN
 
 bash(name: :push, pattern: /Launching\.\.\. done/, stdin: <<'EOSTDIN')
   cd ./app
-  git push git@heroku.com:$TARGET_APP.git master
+  git push -f git@heroku.com:$TARGET_APP.git master
 EOSTDIN
