@@ -10,7 +10,7 @@ bash(retry: 2, name: :heroku_info_create, stdin: <<'EOF')
   }
 EOF
 
-bash(retry: 2, name: :clone, pattern: /cloned an empty repository/, stdin: <<'EOF')
+bash(name: :clone, pattern: /cloned an empty repository/, stdin: <<'EOF')
   rm -rf ./app
   git clone ssh://git@gitproxy-default.herokussl.com:2222/$TARGET_APP.git
 EOF
