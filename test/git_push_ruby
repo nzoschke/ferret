@@ -39,7 +39,7 @@ EOF
   fi
 
   git add .
-  git commit -m "create app"
+  git commit -m "create app" --author="Your Name <you@example.com>"
 EOSTDIN
 
 bash(name: :push, pattern: /Launching\.\.\. done/, stdin: <<'EOSTDIN')
