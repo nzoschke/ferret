@@ -3,15 +3,15 @@ require "securerandom"
 require "timeout"
 require "tmpdir"
 
-ENV["FERRET_APP"] ||= "ferretapp"
 ENV["FERRET_DIR"] ||= File.expand_path(File.join(__FILE__, "..", ".."))
 ENV["ORG"]        ||= "ferret"
-ENV["NAME"]       ||= File.basename($0, File.extname($0))           # e.g. git_push
-ENV["TARGET_APP"] ||= "#{ENV["ORG"]}-#{ENV["NAME"]}".gsub(/_/, '-') # e.g. ferret-git-push
+ENV["NAME"]       ||= File.basename($0, File.extname($0)) # e.g. git_push
+ENV["TARGET"]     ||= "#{ENV["APP"]}.#{ENV["NAME"]}"      # e.g. ferret-noah.git-push
+ENV["TARGET_APP"] ||= ENV["TARGET"].gsub(/[\._]/, '-')    # e.g. ferret-noah-git-push
 ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
 
-$log_prefix       ||= { app: "#{ENV["ORG"]}.#{ENV["NAME"]}", xid: ENV["XID"] }
+$log_prefix       ||= { app: ENV["TARGET"], xid: ENV["XID"] }
 $logdevs          ||= [$stdout, IO.popen("logger", "w")]
 
 trap("EXIT") do
@@ -56,16 +56,16 @@ def bash(opts={})
         success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
 
         if success
-          log fn: opts[:name], i: i, status: status, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.success"
-          log fn: opts[:name], i: i, val: 100, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.uptime"
-          log fn: opts[:name], i: i, at: :return, val: Time.now - start, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.time"
+          log fn: opts[:name], i: i, status: status, measure: "#{ENV["TARGET"]}.#{opts[:name]}.success"
+          log fn: opts[:name], i: i, val: 100, measure: "#{ENV["TARGET"]}.#{opts[:name]}.uptime"
+          log fn: opts[:name], i: i, at: :return, val: Time.now - start, measure: "#{ENV["TARGET"]}.#{opts[:name]}.time"
           return success # break out of retry loop
         else
           out.each_line { |l| log fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
           # only measure last failure
           if i == opts[:retry] - 1
-            log fn: opts[:name], i: i, status: status, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.failure"
-            log fn: opts[:name], i: i, val: 0, measure: "#{ENV["ORG"]}.#{ENV["NAME"]}.#{opts[:name]}.uptime"
+            log fn: opts[:name], i: i, status: status, measure: "#{ENV["TARGET"]}.#{opts[:name]}.failure"
+            log fn: opts[:name], i: i, val: 0, measure: "#{ENV["TARGET"]}.#{opts[:name]}.uptime"
           else
             log fn: opts[:name], i: i, status: status
           end
