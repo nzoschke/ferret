@@ -6,6 +6,7 @@
 heroku plugins:install https://github.com/heroku/manager-cli.git
 heroku plugins:install https://github.com/ddollar/heroku-anvil.git
 heroku sudo passes:add logplex-beta-program
+
 heroku apps:create $APP
 heroku config:set --app ${APP}                        \
   APP=$APP                                            \
@@ -19,5 +20,3 @@ heroku build -b https://github.com/nzoschke/buildpack-ferret.git -r $APP
 heroku run "test/ferret; test/ferret_online" --app ${APP}
 
 heroku drains:add --app ${APP} ${L2MET_URL}
-
-
