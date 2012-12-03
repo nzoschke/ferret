@@ -6,7 +6,7 @@ bash(retry: 2, name: :heroku_info_create, stdin: <<'EOF')
   heroku info --app $TARGET_APP || {
     heroku create $TARGET_APP                                             \
       && heroku plugins:install https://github.com/heroku/manager-cli.git \
-      && heroku manager:transfer --app $TARGET_APP --to ferret
+      && heroku manager:transfer --app $TARGET_APP --to $ORG
   }
 EOF
 
