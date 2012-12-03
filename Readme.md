@@ -14,38 +14,15 @@ Heroku Org          ferret
 The Control App test process logs are drained to l2met, where service availability and service time can be calculated and visualized via Librato 
 Metrics.
 
-## Control App Setup
+## Development Control App Setup
 
-NOTE: You can bypass this by joining $ORG.
+Get a HEROKU_API_KEY for an unpriveledged $GMAIL_USER, and an [L2Met drain](https://www.l2met.net/) for a personal Librato account.
+
+Copy `env.sample` to `.env`, and fill in APP, HEROKU_API_KEY and L2MET_URL, then run the setup script via Foreman.
 
 ```sh
-# Create an unpriveledged GMail account, sign up for Heroku, and save the keys
-$ export                                                                  \
-    UNPRIVILEGED_HEROKU_API_KEY=deadbeef87a9b10d49ab5036216c41b7f8cc3633  \
-    UNPRIVILEGED_GMAIL_USER=heroku.ferret@gmail.com:deadbeef84c277fa
-
-# Create an app and add the API keys
-$ export APP=ferretapp
-$ heroku create $APP
-$ heroku config:set                                                       \
-    APP=$APP                                                              \
-    GMAIL_USER=$UNPRIVILEGED_GMAIL_USER                                   \
-    HEROKU_API_KEY=$UNPRIVILEGED_HEROKU_API_KEY
-
-# Add the account and transfer the app to the "ferret" Heroku Manager org
-$ export ORG=ferret
-$ heroku manager:add_user                                                 \
-    --org $ORG --user ${UNPRIVILEGED_GMAIL_USER%:*} --role admin
-$ heroku manager:transfer --to $ORG
-
-# Build and release the code, then run the tests
-$ heroku build -b https://github.com/nzoschke/buildpack-ferret.git -r $APP
-$ heroku run "test/ferret; test/ferret_online"
-
-# Send metrics to Librato via https://www.l2met.net/
-
-$ heroku sudo passes:add logplex-beta-program
-$ heroku drains:add https://drain.l2met.net/consumers/36f8e609-df04-4da2-8630-86a959f41c68/logs
+cp env.sample .env
+foreman run bin/setup.sh
 ```
 
 ## Local Run
