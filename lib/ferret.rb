@@ -31,10 +31,11 @@ def bash(opts={})
   opts.rmerge!(name: "bash", retry: 1, pattern: nil, status: 0, stdin: "false", timeout: 180)
 
   begin
+
     Timeout.timeout(opts[:timeout]) do
       opts[:retry].times do |i|
         start = Time.now
-        log fn: opts[:name], i: i, at: :enter
+        log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, at: :enter
 
         r0, w0 = IO.pipe
         r1, w1 = IO.pipe
@@ -56,27 +57,27 @@ def bash(opts={})
         success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
 
         if success
-          log fn: opts[:name], i: i, status: status, measure: "#{ENV["TARGET"]}.#{opts[:name]}.success"
-          log fn: opts[:name], i: i, val: 100, measure: "#{ENV["TARGET"]}.#{opts[:name]}.uptime"
-          log fn: opts[:name], i: i, at: :return, val: Time.now - start, measure: "#{ENV["TARGET"]}.#{opts[:name]}.time"
+          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status, measure: "#{ENV["TARGET"]}.#{opts[:name]}.success"
+          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, val: 100, measure: "#{ENV["TARGET"]}.#{opts[:name]}.uptime"
+         log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, at: :return, val: Time.now - start, measure: "#{ENV["TARGET"]}.#{opts[:name]}.time"
           return success # break out of retry loop
         else
-          out.each_line { |l| log fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
+          out.each_line { |l| log source: ENV["TARGET"],fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
           # only measure last failure
           if i == opts[:retry] - 1
-            log fn: opts[:name], i: i, status: status, measure: "#{ENV["TARGET"]}.#{opts[:name]}.failure"
-            log fn: opts[:name], i: i, val: 0, measure: "#{ENV["TARGET"]}.#{opts[:name]}.uptime"
+            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status, measure: "#{ENV["TARGET"]}.#{opts[:name]}.failure"
+            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, val: 0, measure: "#{ENV["TARGET"]}.#{opts[:name]}.uptime"
           else
-            log fn: opts[:name], i: i, status: status
+            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status
           end
-          log fn: opts[:name], i: i, at: :return, val: Time.now - start
+          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, at: :return, val: Time.now - start
         end
       end
 
       exit(1)
     end
   rescue Timeout::Error
-    log fn: opts[:name], at: :timeout, val: opts[:timeout]
+    log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], at: :timeout, val: opts[:timeout]
     Process.kill("INT", -Process.getpgid(opts[:pid]))
     Process.wait(opts[:pid])
     exit(2)
