@@ -41,7 +41,7 @@ app=ferret.git_clone xid=40ff7bbd fn=exit
 ## Platform Run
 
 ```sh
-$ heroku run git_clone
+$ heroku run test/git_clone
 
 # OR
 
