@@ -12,3 +12,5 @@ perf_network:             bin/loop test/perf_network
 ssh_fingerprint:          bin/loop test/ssh_fingerprint
 ssh_path:                 bin/loop test/ssh_path
 ssh_tcp_receive:          bin/loop test/ssh_tcp_receive
+http_curl:				  bin/loop test/http_curl
+http_recurl:	     	  bin/loop test/http_recurl
