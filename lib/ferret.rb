@@ -57,16 +57,16 @@ def bash(opts={})
         success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
 
         if success
-          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status, measure: "#{ENV["TARGET"]}.#{opts[:name]}.success"
-          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, val: 100, measure: "#{ENV["TARGET"]}.#{opts[:name]}.uptime"
-         log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, at: :return, val: Time.now - start, measure: "#{ENV["TARGET"]}.#{opts[:name]}.time"
+          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status, measure: "success"
+          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, val: 100, measure: "uptime"
+         log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, at: :return, val: Time.now - start, measure: "time"
           return success # break out of retry loop
         else
           out.each_line { |l| log source: ENV["TARGET"],fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
           # only measure last failure
           if i == opts[:retry] - 1
-            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status, measure: "#{ENV["TARGET"]}.#{opts[:name]}.failure"
-            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, val: 0, measure: "#{ENV["TARGET"]}.#{opts[:name]}.uptime"
+            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status, measure: "failure"
+            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, val: 0, measure: "uptime"
           else
             log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status
           end
