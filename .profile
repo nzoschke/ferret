@@ -1,5 +1,5 @@
 #!/bin/bash
-
+export APP=$APP_PREFIX
 [ -n "$APP" ]            || { echo "error: APP required"; exit 1; }
 [ -n "$HEROKU_API_KEY" ] || { echo "error: HEROKU_API_KEY required"; exit 1; }
 

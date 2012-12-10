@@ -10,10 +10,11 @@ ENV["TARGET"]     ||= "#{ENV["APP"]}.#{ENV["NAME"]}"      # e.g. ferret-noah.git
 ENV["TARGET_APP"] ||= ENV["TARGET"].gsub(/[\._]/, '-')    # e.g. ferret-noah-git-push
 ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
-
+ENV["FREQ"]       ||= "10"
 $log_prefix       ||= { app: ENV["TARGET"], xid: ENV["XID"] }
 $logdevs          ||= [$stdout, IO.popen("logger", "w")]
-
+$threads             = []
+$lock                = Mutex.new
 trap("EXIT") do
   log fn: :exit
   pids = $logdevs.map { |logdev| logdev.pid }.compact
@@ -27,6 +28,56 @@ class Hash
   end
 end
 
+def run(time)
+  if time == :forever
+    $threads.each(&:join)
+  else
+    #should be 
+    #sleep time 
+    #but for some reason this code path is being hit even when forever is passed
+    $threads.each(&:join)
+  end
+end
+
+def uses_app(path)
+  ENV["APP_DIR"] = path
+  bash(retry: 2, name: :setup, stdin: <<-'EOSTDIN')
+  heroku info --app $TARGET_APP || {
+    heroku create $TARGET_APP                                            \
+    && heroku plugins:install https://github.com/heroku/manager-cli.git  \
+    && heroku manager:transfer --app $TARGET_APP --to $ORG               \
+    && cd $APP_DIR                                                       \
+    && bundle install                                                    \
+    && heroku build -r $TARGET_APP $APP_DIR                              \
+    && heroku scale web=1 --app $TARGET_APP                              \
+    && cd $FERRET_DIR
+  }
+EOSTDIN
+  #if setup has been defined use that
+  #otherwise run basic deploy
+end
+
+def run_interval(interval, &block)
+  $threads << Thread.new do
+    loop {
+      $lock.synchronize {
+        block.call
+      }
+      sleep interval * Integer(ENV["FREQ"])
+    }
+  end
+end
+
+def run_every_time(&block)
+  $threads << Thread.new do
+    loop{
+      $lock.synchronize {
+        block.call
+      }
+      sleep Integer(ENV["FREQ"])
+    }
+  end
+end
 def bash(opts={})
   opts.rmerge!(name: "bash", retry: 1, pattern: nil, status: 0, stdin: "false", timeout: 180)
 
@@ -57,27 +108,27 @@ def bash(opts={})
         success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
 
         if success
-          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status, measure: "success"
-          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, val: 100, measure: "uptime"
-         log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, at: :return, val: Time.now - start, measure: "time"
+          log source: "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"], i: i, status: status, measure: "success"
+          log source:  "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"], i: i, val: 100, measure: "uptime"
+          log source:  "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"], i: i, at: :return, val: Time.now - start, measure: "time"
           return success # break out of retry loop
         else
-          out.each_line { |l| log source: ENV["TARGET"],fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
+          out.each_line { |l| log source:  "#{ENV["NAME"]}.#{opts[:name]}", i: i, at: :failure, out: "'#{l.strip}'" }
           # only measure last failure
           if i == opts[:retry] - 1
-            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status, measure: "failure"
-            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, val: 0, measure: "uptime"
+            log source:  "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"], i: i, status: status, measure: "failure"
+            log source:  "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"], i: i, val: 0, measure: "uptime"
           else
-            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status
+            log source:  "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"], i: i, status: status
           end
-          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, at: :return, val: Time.now - start
+          log source: "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"], i: i, at: :return, val: Time.now - start
         end
       end
 
       exit(1)
     end
   rescue Timeout::Error
-    log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], at: :timeout, val: opts[:timeout]
+    log source:  "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"],at: :timeout, val: opts[:timeout]
     Process.kill("INT", -Process.getpgid(opts[:pid]))
     Process.wait(opts[:pid])
     exit(2)
