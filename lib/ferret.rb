@@ -5,10 +5,8 @@ require "tmpdir"
 
 ENV["APP"]        ||= "ferret"
 ENV["FERRET_DIR"] ||= File.expand_path(File.join(__FILE__, "..", ".."))
+ENV["FILENAME"]   ||= File.basename($0, File.extname($0)) # e.g. git/push
 ENV["ORG"]        ||= "ferret"
-ENV["NAME"]       ||= File.basename($0, File.extname($0)) # e.g. git_push
-ENV["TARGET"]     ||= "#{ENV["APP"]}.#{ENV["NAME"]}"      # e.g. ferret-noah.git-push
-ENV["TARGET_APP"] ||= ENV["TARGET"].gsub(/[\._]/, '-')    # e.g. ferret-noah-git-push
 ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
 
@@ -36,7 +34,8 @@ def bash(opts={})
     Timeout.timeout(opts[:timeout]) do
       opts[:retry].times do |i|
         start = Time.now
-        log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, at: :enter
+        source = [ENV["FILENAME"].gsub(/\//, "."), opts[:name]].join(".").gsub(/_/, "-")
+        log source: source, i: i, at: :enter
 
         r0, w0 = IO.pipe
         r1, w1 = IO.pipe
@@ -58,27 +57,27 @@ def bash(opts={})
         success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
 
         if success
-          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status, measure: "success"
-          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, val: 100, measure: "uptime"
-         log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, at: :return, val: Time.now - start, measure: "time"
+          log source: source, i: i, status: status, measure: "success"
+          log source: source, i: i, val: 100, measure: "uptime"
+          log source: source, i: i, at: :return, val: Time.now - start, measure: "time"
           return success # break out of retry loop
         else
-          out.each_line { |l| log source: ENV["TARGET"],fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
+          out.each_line { |l| log source: source, fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
           # only measure last failure
           if i == opts[:retry] - 1
-            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status, measure: "failure"
-            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, val: 0, measure: "uptime"
+            log source: source, fn: opts[:name], i: i, status: status, measure: "failure"
+            log source: source, fn: opts[:name], i: i, val: 0, measure: "uptime"
           else
-            log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, status: status
+            log source: source, fn: opts[:name], i: i, status: status
           end
-          log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], i: i, at: :return, val: Time.now - start
+          log source: source, fn: opts[:name], i: i, at: :return, val: Time.now - start
         end
       end
 
       exit(1)
     end
   rescue Timeout::Error
-    log source: ENV["NAME"], app: ENV["APP"],fn: opts[:name], at: :timeout, val: opts[:timeout]
+    log source: source, at: :timeout, val: opts[:timeout]
     Process.kill("INT", -Process.getpgid(opts[:pid]))
     Process.wait(opts[:pid])
     exit(2)
