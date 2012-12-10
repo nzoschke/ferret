@@ -3,6 +3,7 @@ require "securerandom"
 require "timeout"
 require "tmpdir"
 
+ENV["APP"]        ||= "ferret"
 ENV["FERRET_DIR"] ||= File.expand_path(File.join(__FILE__, "..", ".."))
 ENV["ORG"]        ||= "ferret"
 ENV["NAME"]       ||= File.basename($0, File.extname($0)) # e.g. git_push
@@ -11,7 +12,7 @@ ENV["TARGET_APP"] ||= ENV["TARGET"].gsub(/[\._]/, '-')    # e.g. ferret-noah-git
 ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
 
-$log_prefix       ||= { app: ENV["TARGET"], xid: ENV["XID"] }
+$log_prefix       ||= { app: "#{ENV["ORG"]}.#{ENV["APP"]}", xid: ENV["XID"] }
 $logdevs          ||= [$stdout, IO.popen("logger", "w")]
 
 trap("EXIT") do
