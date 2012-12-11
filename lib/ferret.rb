@@ -11,6 +11,8 @@ ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
 ENV["FREQ"]       ||= "10"
 ENV["NAME"]       ||= File.basename($0, File.extname($0)) # e.g. git_push
+ENV["SERVICE_LOG_NAME"]     ||= "#{ENV["APP_PREFIX"]}.#{ENV["NAME"]}"      # e.g. ferret-noah.git-push #slave app name
+ENV["SERVICE_APP_NAME"] ||= ENV["SERVICE_LOG_NAME"].gsub(/[\._]/, '-')    # e.g. ferret-noah-git-push #used for deploying slave app
 
 $log_prefix       ||= { app: "#{ENV["ORG"]}.#{ENV["APP"]}", xid: ENV["XID"] }
 $logdevs          ||= [$stdout, IO.popen("logger", "w")]

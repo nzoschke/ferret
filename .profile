@@ -18,3 +18,6 @@ if [ ! -f $HOME/.ssh/id_rsa ]; then
   heroku config:set --app $APP SSH_PRIVATE_KEY="$(< $HOME/.ssh/id_rsa)" SSH_PUBLIC_KEY="$(< $HOME/.ssh/id_rsa.pub)"
 fi
 
+gem install bundler
+heroku plugins:install https://github.com/heroku/manager-cli.git
+heroku plugins:install https://github.com/ddollar/heroku-anvil.git
