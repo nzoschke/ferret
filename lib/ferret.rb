@@ -27,12 +27,12 @@ end
 
 def test(opts={}, &blk)
   opts.rmerge!(name: "test", retry: 1, pattern: nil, status: 0, timeout: 180)
+  source = "#{ENV["FILENAME"]}.#{opts[:name]}".gsub(/\//, ".").gsub(/_/, "-")
 
   begin
     Timeout.timeout(opts[:timeout]) do
       opts[:retry].times do |i|
         start = Time.now
-        source = "#{ENV["FILENAME"]}.#{opts[:name]}".gsub(/\//, ".").gsub(/_/, "-")
         log source: source, i: i, at: :enter
 
         if opts[:bash]
