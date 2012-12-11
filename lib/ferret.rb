@@ -5,7 +5,7 @@ require "tmpdir"
 
 ENV["APP"]        ||= "ferret"
 ENV["FERRET_DIR"] ||= File.expand_path(File.join(__FILE__, "..", ".."))
-ENV["FILENAME"]   ||= File.basename($0, File.extname($0)) # e.g. git/push
+ENV["SCRIPT"]     ||= File.basename($0, File.extname($0)) # e.g. git/push
 ENV["ORG"]        ||= "ferret"
 ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
@@ -32,7 +32,7 @@ end
 
 def test(opts={}, &blk)
   opts.rmerge!(name: "test", retry: 1, pattern: nil, status: 0, timeout: 180)
-  source = "#{ENV["FILENAME"]}.#{opts[:name]}".gsub(/\//, ".").gsub(/_/, "-")
+  source = "#{ENV["SCRIPT"]}.#{opts[:name]}".gsub(/\//, ".").gsub(/_/, "-")
 
   begin
     Timeout.timeout(opts[:timeout]) do

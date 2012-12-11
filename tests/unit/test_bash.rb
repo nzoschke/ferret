@@ -1,4 +1,4 @@
-ENV["FILENAME"] = "unit/test" # rake sets $0 to rake-test-loader
+ENV["SCRIPT"] = "unit/test_bash" # rake sets $0 to rake-test-loader
 
 require_relative "./test_helper"
 
