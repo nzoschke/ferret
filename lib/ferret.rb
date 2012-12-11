@@ -5,8 +5,8 @@ require "tmpdir"
 
 ENV["APP"]        ||= "ferret"
 ENV["FERRET_DIR"] ||= File.expand_path(File.join(__FILE__, "..", ".."))
-ENV["SCRIPT"]     ||= File.basename($0, File.extname($0)) # e.g. git/push
 ENV["ORG"]        ||= "ferret"
+ENV["SCRIPT"]     ||= File.expand_path($0) # $FERRET_DIR/tests/git/push or $FERRET_DIR/tests/unit/test_ferret.rb
 ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
 
@@ -32,7 +32,11 @@ end
 
 def test(opts={}, &blk)
   opts.rmerge!(name: "test", retry: 1, pattern: nil, status: 0, timeout: 180)
-  source = "#{ENV["SCRIPT"]}.#{opts[:name]}".gsub(/\//, ".").gsub(/_/, "-")
+
+  script = ENV["SCRIPT"].chomp(File.extname(ENV["SCRIPT"]))           # strip extension
+  script = script.split("/").last(2).join("/")                        # e.g. git/push or unit/test_ferret
+  ENV["TARGET_APP"] = "#{ENV["APP"]}-#{script}".gsub(/[\/_]/, "-")    # e.g. ferret-git-push or ferret-unit-test-ferret
+  source = "#{script}.#{opts[:name]}".gsub(/\//, ".").gsub(/_/, "-")  # e.g. git.push.test
 
   begin
     Timeout.timeout(opts[:timeout]) do

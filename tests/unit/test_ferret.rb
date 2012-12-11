@@ -1,8 +1,18 @@
-ENV["SCRIPT"] = "unit/test_ferret" # rake sets $0 to rake-test-loader
+ENV["SCRIPT"] = __FILE__
 
 require_relative "./test_helper"
 
 class TestFerret < TestBase
+  def test_env
+    assert_equal "ferret-minitest",                   ENV["APP"]
+    assert_equal __FILE__,                            ENV["SCRIPT"]
+    assert                                            ENV["FERRET_DIR"]
+    assert_equal "ferret-dev",                        ENV["ORG"]
+    assert_equal "ferret-minitest-unit-test-ferret",  ENV["TARGET_APP"]
+    assert                                            ENV["TEMP_DIR"]
+    assert_equal "deadbeef",                          ENV["XID"]
+  end
+
   def test_log
     log(foo: :bar)
     assert_equal logs, "app=ferret-dev.ferret-minitest xid=deadbeef foo=bar\n"
