@@ -1,6 +1,0 @@
-#!/bin/bash
-
-SLEEP=${SLEEP:-30}
-
-sleep $(($RANDOM%$SLEEP))                 # random sleep to avoid stampedes
-while true; do "$@"; sleep $SLEEP; done   # infinite loop with sleep

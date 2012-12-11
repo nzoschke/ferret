@@ -5,13 +5,17 @@ require "tmpdir"
 
 ENV["APP"]        ||= "ferret"
 ENV["FERRET_DIR"] ||= File.expand_path(File.join(__FILE__, "..", ".."))
-ENV["ORG"]        ||= "ferret"
+ENV["ORG"]        ||= "ferret-dev"
 ENV["SCRIPT"]     ||= File.expand_path($0) # $FERRET_DIR/tests/git/push or $FERRET_DIR/tests/unit/test_ferret.rb
 ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
+ENV["FREQ"]       ||= "10"
+ENV["NAME"]       ||= File.basename($0, File.extname($0)) # e.g. git_push
 
 $log_prefix       ||= { app: "#{ENV["ORG"]}.#{ENV["APP"]}", xid: ENV["XID"] }
 $logdevs          ||= [$stdout, IO.popen("logger", "w")]
+$threads             = []
+$lock                = Mutex.new
 
 trap("EXIT") do
   log fn: :exit
@@ -25,6 +29,54 @@ class Hash
   end
 end
 
+def run(opts={})
+  puts opts.inspect
+  if opts[:forever]
+    $threads.each(&:join)
+  else
+    sleep opts[:time]
+  end
+end
+
+def uses_app(path)
+  ENV["APP_DIR"] = path
+  bash(retry: 2, name: :setup, stdin: <<-'EOSTDIN')
+  heroku apps:delete $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME
+  heroku apps:create $SERVICE_APP_NAME                                              \
+    && heroku plugins:install https://github.com/heroku/manager-cli.git  \
+    && heroku manager:transfer --app $SERVICE_APP_NAME --to $ORG               \
+    && cd $APP_DIR                                                       \
+    && bundle install                                                    \
+    && heroku build -r $SERVICE_APP_NAME                                       \
+    && heroku scale web=1 --app $SERVICE_APP_NAME                              \
+    && cd $FERRET_DIR
+
+  EOSTDIN
+  #if setup has been defined use that
+  #otherwise run basic deploy
+end
+
+def run_interval(interval, &block)
+  $threads << Thread.new do
+    loop {
+      $lock.synchronize {
+        block.call
+      }
+      sleep interval * 10
+    }
+  end
+end
+
+def run_every_time(&block)
+  $threads << Thread.new do
+    loop{
+      $lock.synchronize {
+        block.call
+      }
+      sleep 10
+    }
+  end
+end
 def bash(opts={})
   opts[:bash] = opts[:stdin]
   test(opts)
@@ -59,6 +111,7 @@ def test(opts={}, &blk)
 
           status = $?.exitstatus
           out    = r1.read
+          puts out
         else
           status = yield ? 0 : 1
           out = ""
@@ -83,12 +136,9 @@ def test(opts={}, &blk)
           else
             log source: source, i: i, status: status
           end
-
           log source: source, i: i, at: :return, val: "%0.4f" % (Time.now - start)
         end
       end
-
-      exit(1)
     end
   rescue Timeout::Error
     log source: source, at: :timeout, val: opts[:timeout]
@@ -96,7 +146,6 @@ def test(opts={}, &blk)
       Process.kill("INT", -Process.getpgid(opts[:pid]))
       Process.wait(opts[:pid])
     end
-    exit(2)
   end
 end
 
