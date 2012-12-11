@@ -25,6 +25,11 @@ class Hash
   end
 end
 
+def bash(opts={})
+  opts[:bash] = opts[:stdin]
+  test(opts)
+end
+
 def test(opts={}, &blk)
   opts.rmerge!(name: "test", retry: 1, pattern: nil, status: 0, timeout: 180)
   source = "#{ENV["FILENAME"]}.#{opts[:name]}".gsub(/\//, ".").gsub(/_/, "-")
