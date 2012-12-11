@@ -57,6 +57,7 @@ def test(opts={}, &blk)
         else
           success = status = yield
           status = success ? 0 : 1
+          out = ""
         end
 
         if success
@@ -65,15 +66,17 @@ def test(opts={}, &blk)
           log source: source, i: i, at: :return, val: "%0.4f" % (Time.now - start), measure: "time"
           return success # break out of retry loop
         else
-          out.each_line { |l| log source: source, fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
+          out.each_line { |l| log source: source, i: i, at: :failure, out: "'#{l.strip}'" }
+
           # only measure last failure
           if i == opts[:retry] - 1
-            log source: source, fn: opts[:name], i: i, status: status, measure: "failure"
-            log source: source, fn: opts[:name], i: i, val: 0, measure: "uptime"
+            log source: source, i: i, status: status, measure: "failure"
+            log source: source, i: i, val: 0, measure: "uptime"
           else
-            log source: source, fn: opts[:name], i: i, status: status
+            log source: source, i: i, status: status
           end
-          log source: source, fn: opts[:name], i: i, at: :return, val: Time.now - start
+
+          log source: source, i: i, at: :return, val: "%0.4f" % (Time.now - start)
         end
       end
 
