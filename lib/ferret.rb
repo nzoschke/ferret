@@ -15,7 +15,6 @@ $logdevs          ||= [$stdout, IO.popen("logger", "w")]
 
 trap("EXIT") do
   log fn: :exit
-  pids = $logdevs.map { |logdev| logdev.pid }.compact
   $logdevs.each { |dev| next if !dev.pid; Process.kill("INT", dev.pid); Process.wait(dev.pid) }
   FileUtils.rm_rf ENV["TEMP_DIR"]
 end
