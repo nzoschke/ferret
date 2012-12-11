@@ -26,40 +26,44 @@ class Hash
   end
 end
 
-def bash(opts={})
-  opts.rmerge!(name: "bash", retry: 1, pattern: nil, status: 0, stdin: "false", timeout: 180)
+def test(opts={}, &blk)
+  opts.rmerge!(name: "test", retry: 1, pattern: nil, status: 0, timeout: 180)
 
   begin
-
     Timeout.timeout(opts[:timeout]) do
       opts[:retry].times do |i|
         start = Time.now
         source = [ENV["FILENAME"].gsub(/\//, "."), opts[:name]].join(".").gsub(/_/, "-")
         log source: source, i: i, at: :enter
 
-        r0, w0 = IO.pipe
-        r1, w1 = IO.pipe
+        if opts[:bash]
+          r0, w0 = IO.pipe
+          r1, w1 = IO.pipe
 
-        opts[:pid] = Process.spawn("bash", "--noprofile", "-s", chdir: ENV["TEMP_DIR"], pgroup: 0, in: r0, out: w1, err: w1)
+          opts[:pid] = Process.spawn("bash", "--noprofile", "-s", chdir: ENV["TEMP_DIR"], pgroup: 0, in: r0, out: w1, err: w1)
 
-        w0.write(opts[:stdin])
-        r0.close
-        w0.close
+          w0.write(opts[:bash])
+          r0.close
+          w0.close
 
-        Process.wait(opts[:pid])
-        w1.close
+          Process.wait(opts[:pid])
+          w1.close
 
-        status = $?.exitstatus
-        out    = r1.read
+          status = $?.exitstatus
+          out    = r1.read
 
-        success   = true
-        success &&= status == opts[:status]   if opts[:status]
-        success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
+          success   = true
+          success &&= status == opts[:status]   if opts[:status]
+          success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
+        else
+          success = status = yield
+          status = success ? 0 : 1
+        end
 
         if success
           log source: source, i: i, status: status, measure: "success"
           log source: source, i: i, val: 100, measure: "uptime"
-          log source: source, i: i, at: :return, val: Time.now - start, measure: "time"
+          log source: source, i: i, at: :return, val: "%0.4f" % (Time.now - start), measure: "time"
           return success # break out of retry loop
         else
           out.each_line { |l| log source: source, fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
@@ -78,8 +82,10 @@ def bash(opts={})
     end
   rescue Timeout::Error
     log source: source, at: :timeout, val: opts[:timeout]
-    Process.kill("INT", -Process.getpgid(opts[:pid]))
-    Process.wait(opts[:pid])
+    if opts[:pid]
+      Process.kill("INT", -Process.getpgid(opts[:pid]))
+      Process.wait(opts[:pid])
+    end
     exit(2)
   end
 end
