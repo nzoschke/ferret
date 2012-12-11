@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+
+require_relative "../lib/ferret"
+
+bash(retry: 2, name: :heroku_info_create, stdin: <<'EOSTDIN')
+  heroku info --app $TARGET_APP || {
+    heroku create $TARGET_APP                                             \
+      && heroku plugins:install https://github.com/heroku/manager-cli.git \
+      && heroku manager:transfer --app $TARGET_APP --to $ORG
+  }
+EOSTDIN
+
+bash(retry: 2, name: :create_app, stdin: <<'EOSTDIN')
+  if [ ! -d ./app ]; then
+    git init ./app
+    cd ./app
+
+    cat >Gemfile <<EOF
+source :rubygems
+gem "rack"
+EOF
+
+    cat >Gemfile.lock <<EOF
+GEM
+  remote: http://rubygems.org/
+  specs:
+    rack (1.4.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  rack
+EOF
+
+  cat >config.ru <<EOF
+run lambda { |env| [200, {'Content-Type'=>'text/plain'}, StringIO.new("Hello World!\n")] }
+EOF
+  fi
+
+  git add .
+  git commit -m "create app" --author="Your Name <you@example.com>"
+EOSTDIN
+
+bash(name: :push, pattern: /Launching\.\.\. done/, stdin: <<'EOSTDIN')
+  cd ./app
+  git commit --allow-empty -m "empty"
+  git push -f git@heroku.com:$TARGET_APP.git master
+EOSTDIN

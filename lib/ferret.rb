@@ -3,20 +3,22 @@ require "securerandom"
 require "timeout"
 require "tmpdir"
 
-ENV["FERRET_APP"] ||= "ferretapp"
+ENV["APP"]        ||= "ferret"
 ENV["FERRET_DIR"] ||= File.expand_path(File.join(__FILE__, "..", ".."))
-ENV["ORG"]        ||= "ferret"
-ENV["NAME"]       ||= File.basename($0, File.extname($0))           # e.g. git_push
-ENV["TARGET_APP"] ||= "#{ENV["ORG"]}-#{ENV["NAME"]}".gsub(/_/, '-') # e.g. ferret-git-push
+ENV["ORG"]        ||= "ferret-dev"
+ENV["SCRIPT"]     ||= File.expand_path($0) # $FERRET_DIR/tests/git/push or $FERRET_DIR/tests/unit/test_ferret.rb
 ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
+ENV["FREQ"]       ||= "10"
+ENV["NAME"]       ||= File.basename($0, File.extname($0)) # e.g. git_push
 
-$log_prefix       ||= { app: "#{ENV["ORG"]}.#{ENV["NAME"]}", xid: ENV["XID"] }
+$log_prefix       ||= { app: "#{ENV["ORG"]}.#{ENV["APP"]}", xid: ENV["XID"] }
 $logdevs          ||= [$stdout, IO.popen("logger", "w")]
+$threads             = []
+$lock                = Mutex.new
 
 trap("EXIT") do
   log fn: :exit
-  pids = $logdevs.map { |logdev| logdev.pid }.compact
   $logdevs.each { |dev| next if !dev.pid; Process.kill("INT", dev.pid); Process.wait(dev.pid) }
   FileUtils.rm_rf ENV["TEMP_DIR"]
 end
@@ -27,52 +29,123 @@ class Hash
   end
 end
 
+def run(opts={})
+  puts opts.inspect
+  if opts[:forever]
+    $threads.each(&:join)
+  else
+    sleep opts[:time]
+  end
+end
+
+def uses_app(path)
+  ENV["APP_DIR"] = path
+  bash(retry: 2, name: :setup, stdin: <<-'EOSTDIN')
+  heroku apps:delete $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME
+  heroku apps:create $SERVICE_APP_NAME                                              \
+    && heroku plugins:install https://github.com/heroku/manager-cli.git  \
+    && heroku manager:transfer --app $SERVICE_APP_NAME --to $ORG               \
+    && cd $APP_DIR                                                       \
+    && bundle install                                                    \
+    && heroku build -r $SERVICE_APP_NAME                                       \
+    && heroku scale web=1 --app $SERVICE_APP_NAME                              \
+    && cd $FERRET_DIR
+
+  EOSTDIN
+  #if setup has been defined use that
+  #otherwise run basic deploy
+end
+
+def run_interval(interval, &block)
+  $threads << Thread.new do
+    loop {
+      $lock.synchronize {
+        block.call
+      }
+      sleep interval * 10
+    }
+  end
+end
+
+def run_every_time(&block)
+  $threads << Thread.new do
+    loop{
+      $lock.synchronize {
+        block.call
+      }
+      sleep 10
+    }
+  end
+end
 def bash(opts={})
-  opts.rmerge!(name: "bash", retry: 1, pattern: nil, status: 0, stdin: "false", timeout: 180)
+  opts[:bash] = opts[:stdin]
+  test(opts)
+end
+
+def test(opts={}, &blk)
+  opts.rmerge!(name: "test", retry: 1, pattern: nil, status: 0, timeout: 180)
+
+  script = ENV["SCRIPT"].chomp(File.extname(ENV["SCRIPT"]))           # strip extension
+  script = script.split("/").last(2).join("/")                        # e.g. git/push or unit/test_ferret
+  ENV["TARGET_APP"] = "#{ENV["APP"]}-#{script}".gsub(/[\/_]/, "-")    # e.g. ferret-git-push or ferret-unit-test-ferret
+  source = "#{script}.#{opts[:name]}".gsub(/\//, ".").gsub(/_/, "-")  # e.g. git.push.test
 
   begin
     Timeout.timeout(opts[:timeout]) do
       opts[:retry].times do |i|
         start = Time.now
-        log fn: opts[:name], i: i, at: :enter
+        log source: source, i: i, at: :enter
 
-        r0, w0 = IO.pipe
-        r1, w1 = IO.pipe
+        if opts[:bash]
+          r0, w0 = IO.pipe
+          r1, w1 = IO.pipe
 
-        opts[:pid] = Process.spawn("bash", "--noprofile", "-s", chdir: ENV["TEMP_DIR"], pgroup: 0, in: r0, out: w1, err: w1)
+          opts[:pid] = Process.spawn("bash", "--noprofile", "-s", chdir: ENV["TEMP_DIR"], pgroup: 0, in: r0, out: w1, err: w1)
 
-        w0.write(opts[:stdin])
-        r0.close
-        w0.close
+          w0.write(opts[:bash])
+          r0.close
+          w0.close
 
-        Process.wait(opts[:pid])
-        w1.close
+          Process.wait(opts[:pid])
+          w1.close
 
-        status = $?.exitstatus
-        out    = r1.read
+          status = $?.exitstatus
+          out    = r1.read
+          puts out
+        else
+          status = yield ? 0 : 1
+          out = ""
+        end
 
         success   = true
         success &&= status == opts[:status]   if opts[:status]
         success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
 
         if success
-          log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.success"
-          log fn: opts[:name], i: i, at: :return, val: Time.now - start, unit: :s, measure: "#{opts[:name]}.time"
+          log source: source, i: i, status: status, measure: "success"
+          log source: source, i: i, val: 100, measure: "uptime"
+          log source: source, i: i, at: :return, val: "%0.4f" % (Time.now - start), measure: "time"
           return success # break out of retry loop
         else
-          out.each_line { |l| log fn: opts[:name], i: i, at: :failure, out: "'#{l.strip}'" }
-          log fn: opts[:name], i: i, status: status, measure: "#{opts[:name]}.failure"
-          log fn: opts[:name], i: i, at: :return, val: Time.now - start, unit: :s
+          out.each_line { |l| log source: source, i: i, at: :failure, out: "'#{l.strip}'" }
+
+          # only measure last failure
+          if i == opts[:retry] - 1
+            log source: source, i: i, status: status, measure: "failure"
+            log source: source, i: i, val: 0, measure: "uptime"
+          else
+            log source: source, i: i, status: status
+          end
+          log source: source, i: i, at: :return, val: "%0.4f" % (Time.now - start)
         end
       end
-
-      exit(1)
     end
   rescue Timeout::Error
-    log fn: opts[:name], at: :timeout, val: opts[:timeout], unit: :s
-    Process.kill("INT", -Process.getpgid(opts[:pid]))
-    Process.wait(opts[:pid])
-    exit(2)
+    log source: source, at: :timeout, val: opts[:timeout]
+    if opts[:pid]
+      Process.kill("INT", -Process.getpgid(opts[:pid]))
+      Process.wait(opts[:pid])
+    end
   end
 end
 

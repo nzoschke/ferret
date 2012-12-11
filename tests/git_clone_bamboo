@@ -6,11 +6,11 @@ bash(retry: 2, name: :heroku_info_create, stdin: <<'EOF')
   heroku info --app $TARGET_APP || {
     heroku create $TARGET_APP -s bamboo                                   \
       && heroku plugins:install https://github.com/heroku/manager-cli.git \
-      && heroku manager:transfer --app $TARGET_APP --to ferret
+      && heroku manager:transfer --app $TARGET_APP --to $ORG
   }
 EOF
 
-bash(retry: 2, name: :clone, pattern: /cloned an empty repository/, stdin: <<'EOF')
+bash(name: :clone, pattern: /cloned an empty repository/, stdin: <<'EOF')
   rm -rf ./app
   git clone git@heroku.com:$TARGET_APP.git ./app
 EOF
