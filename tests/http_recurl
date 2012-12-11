@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+require_relative "../lib/ferret"
+
+uses_app ENV["FERRET_DIR"] + "/app/basic_http"
+
+
+run_interval 10 do 
+  bash(name: :consider_restart, timeout:50,stdin: <<-'EESTD')
+    heroku restart --app $SERVICE_APP_NAME
+EESTD
+end
+
+
+#make these function calls with ruby blocks
+run_every_time do
+  bash(name: :poll, timeout: 3900, stdin: <<-'EOSH')
+    set -x
+    res=$( curl -w %{http_code} -s --output /dev/null http://${SERVICE_APP_NAME}.herokuapp.com)
+    [ $res == "200" ]
+EOSH
+end
+
+
+run forever: true
