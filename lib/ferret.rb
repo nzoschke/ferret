@@ -32,7 +32,7 @@ def test(opts={}, &blk)
     Timeout.timeout(opts[:timeout]) do
       opts[:retry].times do |i|
         start = Time.now
-        source = [ENV["FILENAME"].gsub(/\//, "."), opts[:name]].join(".").gsub(/_/, "-")
+        source = "#{ENV["FILENAME"]}.#{opts[:name]}".gsub(/\//, ".").gsub(/_/, "-")
         log source: source, i: i, at: :enter
 
         if opts[:bash]
@@ -50,15 +50,14 @@ def test(opts={}, &blk)
 
           status = $?.exitstatus
           out    = r1.read
-
-          success   = true
-          success &&= status == opts[:status]   if opts[:status]
-          success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
         else
-          success = status = yield
-          status = success ? 0 : 1
+          status = yield ? 0 : 1
           out = ""
         end
+
+        success   = true
+        success &&= status == opts[:status]   if opts[:status]
+        success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
 
         if success
           log source: source, i: i, status: status, measure: "success"
