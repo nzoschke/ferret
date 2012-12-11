@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+
+require_relative "../lib/ferret"
+
+bash(retry: 2, name: :heroku_info_create, stdin: <<'EOF')
+  heroku info --app $TARGET_APP || {
+    heroku create $TARGET_APP                                             \
+      && heroku plugins:install https://github.com/heroku/manager-cli.git \
+      && heroku manager:transfer --app $TARGET_APP --to ferret
+  }
+EOF
+
+bash(name: :http_push, pattern: /Heroku receiving push/, stdin: <<'EOF')
+  rm -rf $TARGET_APP
+  mkdir $TARGET_APP
+  cd $TARGET_APP
+  git init
+  date > now
+  git add now
+  git commit -m initial
+  git push --force https://code.heroku.com/$TARGET_APP.git master
+EOF
