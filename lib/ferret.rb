@@ -4,17 +4,18 @@ require "timeout"
 require "tmpdir"
 
 ENV["FERRET_DIR"] ||= File.expand_path(File.join(__FILE__, "..", ".."))
-ENV["ORG"]        ||= "ferret"
+ENV["ORG"]        ||= "ferret-dev"
 ENV["NAME"]       ||= File.basename($0, File.extname($0)) # e.g. git_push
-ENV["TARGET"]     ||= "#{ENV["APP"]}.#{ENV["NAME"]}"      # e.g. ferret-noah.git-push
-ENV["TARGET_APP"] ||= ENV["TARGET"].gsub(/[\._]/, '-')    # e.g. ferret-noah-git-push
+ENV["SERVICE_LOG_NAME"]     ||= "#{ENV["APP_PREFIX"]}.#{ENV["NAME"]}"      # e.g. ferret-noah.git-push #slave app name
+ENV["SERVICE_APP_NAME"] ||= ENV["SERVICE_LOG_NAME"].gsub(/[\._]/, '-')    # e.g. ferret-noah-git-push #used for deploying slave app
 ENV["TEMP_DIR"]   ||= Dir.mktmpdir
 ENV["XID"]        ||= SecureRandom.hex(4)
 ENV["FREQ"]       ||= "10"
-$log_prefix       ||= { app: ENV["TARGET"], xid: ENV["XID"] }
+$log_prefix       ||= { app: ENV["SERVICE_LOG_NAME"], xid: ENV["XID"] }
 $logdevs          ||= [$stdout, IO.popen("logger", "w")]
 $threads             = []
 $lock                = Mutex.new
+
 trap("EXIT") do
   log fn: :exit
   pids = $logdevs.map { |logdev| logdev.pid }.compact
@@ -28,30 +29,31 @@ class Hash
   end
 end
 
-def run(time)
-  if time == :forever
+def run(opts={})
+  puts opts.inspect
+  if opts[:forever]
     $threads.each(&:join)
   else
     #should be 
     #sleep time 
     #but for some reason this code path is being hit even when forever is passed
-    $threads.each(&:join)
+    sleep opts[:time]
   end
 end
 
 def uses_app(path)
   ENV["APP_DIR"] = path
   bash(retry: 2, name: :setup, stdin: <<-'EOSTDIN')
-  heroku info --app $TARGET_APP || {
-    heroku create $TARGET_APP                                            \
-    && heroku plugins:install https://github.com/heroku/manager-cli.git  \
-    && heroku manager:transfer --app $TARGET_APP --to $ORG               \
-    && cd $APP_DIR                                                       \
-    && bundle install                                                    \
-    && heroku build -r $TARGET_APP $APP_DIR                              \
-    && heroku scale web=1 --app $TARGET_APP                              \
-    && cd $FERRET_DIR
-  }
+    heroku apps:delete $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME
+    heroku apps:create $SERVICE_APP_NAME                                              \
+      && heroku plugins:install https://github.com/heroku/manager-cli.git  \
+      && heroku manager:transfer --app $SERVICE_APP_NAME --to $ORG               \
+      && cd $APP_DIR                                                       \
+      && bundle install                                                    \
+      && heroku build -r $SERVICE_APP_NAME                                       \
+      && heroku scale web=1 --app $SERVICE_APP_NAME                              \
+      && cd $FERRET_DIR
+
 EOSTDIN
   #if setup has been defined use that
   #otherwise run basic deploy
@@ -63,7 +65,7 @@ def run_interval(interval, &block)
       $lock.synchronize {
         block.call
       }
-      sleep interval * Integer(ENV["FREQ"])
+      sleep interval * 10
     }
   end
 end
@@ -74,7 +76,7 @@ def run_every_time(&block)
       $lock.synchronize {
         block.call
       }
-      sleep Integer(ENV["FREQ"])
+      sleep 10
     }
   end
 end
@@ -102,7 +104,7 @@ def bash(opts={})
 
         status = $?.exitstatus
         out    = r1.read
-
+        puts out
         success   = true
         success &&= status == opts[:status]   if opts[:status]
         success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
@@ -113,7 +115,7 @@ def bash(opts={})
           log source:  "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"], i: i, at: :return, val: Time.now - start, measure: "time"
           return success # break out of retry loop
         else
-          out.each_line { |l| log source:  "#{ENV["NAME"]}.#{opts[:name]}", i: i, at: :failure, out: "'#{l.strip}'" }
+          out.each_line { |l| log source:  "#{ENV["NAME"]}.#{opts[:name]}",app: ENV["APP"],  i: i, at: :failure, out: "'#{l.strip}'" }
           # only measure last failure
           if i == opts[:retry] - 1
             log source:  "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"], i: i, status: status, measure: "failure"
@@ -124,8 +126,6 @@ def bash(opts={})
           log source: "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"], i: i, at: :return, val: Time.now - start
         end
       end
-
-      exit(1)
     end
   rescue Timeout::Error
     log source:  "#{ENV["NAME"]}.#{opts[:name]}", app: ENV["APP"],at: :timeout, val: opts[:timeout]
