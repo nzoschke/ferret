@@ -3,5 +3,5 @@
 require_relative "../lib/ferret"
 
 bash(name: :blowfish, stdin: <<'EOF')
-  openssl speed blowfish
+  openssl speed rsa -elapsed -mr
 EOF
