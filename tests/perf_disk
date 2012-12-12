@@ -2,6 +2,7 @@
 
 require_relative "../lib/ferret"
 
+run_every_time do
 bash(name: :dd, stdin: <<'EOF')
   rm -f /tmp/o
   if [ "$(uname)" = "Darwin" ]; then
@@ -10,3 +11,6 @@ bash(name: :dd, stdin: <<'EOF')
     dd if=/dev/zero of=/tmp/o bs=10M count=20 oflag=direct,sync
   fi
 EOF
+end
+
+run forever:true

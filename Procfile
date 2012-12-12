@@ -1,1 +1,1 @@
-tester: tests/http_recurl
+tester: tests/perf_network
