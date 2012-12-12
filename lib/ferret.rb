@@ -3,21 +3,21 @@ require "securerandom"
 require "timeout"
 require "tmpdir"
 
-ENV["APP"]        ||= "ferret"
-ENV["FERRET_DIR"] ||= File.expand_path(File.join(__FILE__, "..", ".."))
-ENV["ORG"]        ||= "ferret-dev"
-ENV["SCRIPT"]     ||= File.expand_path($0) # $FERRET_DIR/tests/git/push or $FERRET_DIR/tests/unit/test_ferret.rb
-ENV["TEMP_DIR"]   ||= Dir.mktmpdir
-ENV["XID"]        ||= SecureRandom.hex(4)
-ENV["FREQ"]       ||= "10"
-ENV["NAME"]       ||= File.basename($0, File.extname($0)) # e.g. git_push
-ENV["SERVICE_LOG_NAME"]     ||= "#{ENV["APP_PREFIX"]}.#{ENV["NAME"]}"      # e.g. ferret-noah.git-push #slave app name
-ENV["SERVICE_APP_NAME"] ||= ENV["SERVICE_LOG_NAME"].gsub(/[\._]/, '-')    # e.g. ferret-noah-git-push #used for deploying slave app
+ENV["APP"]                ||= "ferret"
+ENV["FERRET_DIR"]         ||= File.expand_path(File.join(__FILE__, "..", ".."))
+ENV["ORG"]                ||= "ferret-dev"
+ENV["SCRIPT"]             ||= File.expand_path($0) # $FERRET_DIR/tests/git/push or $FERRET_DIR/tests/unit/test_ferret.rb
+ENV["TEMP_DIR"]           ||= Dir.mktmpdir
+ENV["XID"]                ||= SecureRandom.hex(4)
+ENV["FREQ"]               ||= "10"
+ENV["NAME"]               ||= File.basename($0, File.extname($0)) # e.g. git_push
+ENV["SERVICE_LOG_NAME"]   ||= "#{ENV["APP_PREFIX"]}.#{ENV["NAME"]}" # e.g. ferret-noah.git-push #slave app name
+ENV["SERVICE_APP_NAME"]   ||= ENV["SERVICE_LOG_NAME"].gsub(/[\._]/, '-') # e.g. ferret-noah-git-push #used for deploying slave app
 
-$log_prefix       ||= { app: "#{ENV["ORG"]}.#{ENV["APP"]}", xid: ENV["XID"] }
-$logdevs          ||= [$stdout, IO.popen("logger", "w")]
-$threads             = []
-$lock                = Mutex.new
+$log_prefix               ||= { app: "#{ENV["ORG"]}.#{ENV["APP"]}", xid: ENV["XID"] }
+$logdevs                  ||= [$stdout, IO.popen("logger", "w")]
+$threads                    = []
+$lock                       = Mutex.new
 
 trap("EXIT") do
   log fn: :exit
@@ -44,14 +44,14 @@ def uses_app(path)
   ENV["APP_DIR"] = path
   bash(retry: 2, name: :setup, stdin: <<-'EOSTDIN')
   heroku apps:delete $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME
-  heroku apps:create $SERVICE_APP_NAME                                              \
-    && heroku plugins:install https://github.com/heroku/manager-cli.git  \
-    && heroku manager:transfer --app $SERVICE_APP_NAME --to $ORG               \
-    && cd $APP_DIR                                                       \
-    && bundle install                                                    \
-    && heroku build -r $SERVICE_APP_NAME                                       \
-    && heroku scale web=1 --app $SERVICE_APP_NAME                              \
-    && cd $FERRET_DIR
+  heroku apps:create $SERVICE_APP_NAME                                       \
+  && heroku plugins:install https://github.com/heroku/manager-cli.git        \
+  && heroku manager:transfer --app $SERVICE_APP_NAME --to $ORG               \
+  && cd $APP_DIR                                                             \
+  && bundle install                                                          \
+  && heroku build -r $SERVICE_APP_NAME                                       \
+  && heroku scale web=1 --app $SERVICE_APP_NAME                              \
+  && cd $FERRET_DIR
 
   EOSTDIN
   #if setup has been defined use that
