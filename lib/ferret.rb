@@ -112,8 +112,7 @@ def test(opts={}, &blk)
           w1.close
 
           status = $?.exitstatus
-          out    = r1.read
-          puts out
+          out    = r1.readS
         else
           status = yield ? 0 : 1
           out = ""
