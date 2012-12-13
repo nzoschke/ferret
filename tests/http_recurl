@@ -15,8 +15,8 @@ end
 run_every_time do
   bash(name: :poll, timeout: 3900, stdin: <<-'EOSH')
     set -x
-    res=$( curl -w %{http_code} -s --output /dev/null http://${SERVICE_APP_NAME}.herokuapp.com)
-    [ $res == "200" ]
+    curl --fail http://${SERVICE_APP_NAME}.herokuapp.com -v
+    
 EOSH
 end
 
