@@ -8,13 +8,13 @@ ENV["FERRET_DIR"]         ||= File.expand_path(File.join(__FILE__, "..", ".."))
 ENV["ORG"]                ||= "ferret-dev"
 ENV["SCRIPT"]             ||= File.expand_path($0) # $FERRET_DIR/tests/git/push or $FERRET_DIR/tests/unit/test_ferret.rb
 ENV["TEMP_DIR"]           ||= Dir.mktmpdir
-ENV["XID"]                ||= SecureRandom.hex(4)
+Thread.current[:xid]         = SecureRandom.hex(4)
 ENV["FREQ"]               ||= "10"
 ENV["NAME"]               ||= File.basename($0, File.extname($0)) # e.g. git_push
 ENV["SERVICE_LOG_NAME"]   ||= "#{ENV["APP_PREFIX"]}.#{ENV["NAME"]}" # e.g. ferret-noah.git-push #slave app name
 ENV["SERVICE_APP_NAME"]   ||= ENV["SERVICE_LOG_NAME"].gsub(/[\._]/, '-') # e.g. ferret-noah-git-push #used for deploying slave app
 
-$log_prefix               ||= { app: "#{ENV["ORG"]}.#{ENV["APP"]}", xid: ENV["XID"] }
+$log_prefix               ||= { app: "#{ENV["ORG"]}.#{ENV["APP"]}"}
 $logdevs                  ||= [$stdout, IO.popen("logger", "w")]
 $threads                    = []
 $lock                       = Mutex.new
@@ -62,6 +62,7 @@ def run_interval(interval, &block)
   $threads << Thread.new do
     loop {
       $lock.synchronize {
+        Thread.current[:xid] = SecureRandom.hex(4)
         block.call
       }
       sleep interval * 10
@@ -73,6 +74,7 @@ def run_every_time(&block)
   $threads << Thread.new do
     loop{
       $lock.synchronize {
+        Thread.current[:xid] = SecureRandom.hex(4)
         block.call
       }
       sleep 10
@@ -152,6 +154,7 @@ end
 
 def log(data)
   data.rmerge! $log_prefix
+  data.rmerge! xid: Thread.current[:xid]
 
   data.reduce(out=String.new) do |s, tup|
     s << [tup.first, tup.last].join("=") << " "
