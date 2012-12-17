@@ -19,8 +19,9 @@ class TestFerret < TestBase
   end
 
   def test_true
-    test(name: :true) { true }
+    r = test(name: :true) { true }
 
+    assert_equal true, r
     assert_equal logs, <<EOF
 app=ferret-dev.ferret-minitest xid=deadbeef source=unit.test-ferret.true i=0 at=enter
 app=ferret-dev.ferret-minitest xid=deadbeef source=unit.test-ferret.true i=0 status=0 measure=success
@@ -30,10 +31,9 @@ EOF
   end
 
   def test_false
-    assert_raises(SystemExit) do
-      test(name: :false) { false }
-    end
+    r = test(name: :false) { false }
 
+    assert_equal 1, r
     assert_equal logs, <<EOF
 app=ferret-dev.ferret-minitest xid=deadbeef source=unit.test-ferret.false i=0 at=enter
 app=ferret-dev.ferret-minitest xid=deadbeef source=unit.test-ferret.false i=0 status=1 measure=failure
