@@ -145,6 +145,7 @@ def test(opts={}, &blk)
   rescue Timeout::Error
     log source: source, at: :timeout, val: opts[:timeout]
     if opts[:pid]
+      puts "timout"  
       Process.kill("INT", -Process.getpgid(opts[:pid]))
       Process.wait(opts[:pid])
     end

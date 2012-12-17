@@ -14,9 +14,9 @@ bash(retry: 1, name: :setup, stdin: <<'EOF')
 EOF
 
 run_every_time do
-bash(name: :clone, pattern: /cloned an empty repository/, stdin: <<'EOF')
-  rm -rf ./app
-  git clone git@heroku.com:$SERVICE_APP_NAME.git ./app
+  bash(name: :clone, pattern: /cloned an empty repository/, stdin: <<'EOF')
+    rm -rf ./app
+    git clone git@heroku.com:$SERVICE_APP_NAME.git ./app
 EOF
 end
 
