@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require_relative "../lib/ferret"
 
-uses_app "../app/basic_http"
+uses_app path:"../app/basic_http"
 
 
 #make these function calls with ruby blocks
