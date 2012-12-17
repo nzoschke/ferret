@@ -1,0 +1,58 @@
+#!/usr/bin/env ruby
+require_relative "../lib/ferret"
+require 'sequel'
+require 'resolv'
+
+
+run_every_time do
+   bash(name: :clean, timeout:50,stdin: <<-'EESTD')
+     heroku apps:delete --app $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME
+     heroku create $SERVICE_APP_NAME
+     heroku addons:add heroku-postgresql --app $SERVICE_APP_NAME 
+EESTD
+
+  test name: :tryresolve, timeout:200 do
+    ENV['DATABASE_URL'] =`heroku config --app $SERVICE_APP_NAME | awk '/HEROKU_POSTGRESQL/ {print $2;}'`
+    uri = URI.parse(ENV['DATABASE_URL'])
+    host = uri.host
+    puts "DB Hostname: #{host}"
+    begin
+      private_ip = Resolv.getaddress(host)
+    rescue => e
+      puts "Error resolving #{host}"
+      puts e.message
+      puts e.backtrace.join("\n")
+    end
+    puts "DB Private IP: #{private_ip}"
+    puts "dyno hostname: #{`hostname`}"
+    puts "dyno private inet: #{`/sbin/ifconfig | grep "inet addr:" | grep -v 127.0.0.1`}"
+    t1 = Thread.new do
+      begin
+        db1 = Sequel.connect(ENV['DATABASE_URL'])
+        puts "With host: Database?: #{db1.test_connection}"
+      rescue => e
+        puts "Error connecting with hostname"
+        puts e.message
+        puts e.backtrace.join("\n")
+        return 1
+      end
+    end
+
+    uri.host = private_ip
+    t2 = Thread.new do
+      begin
+        db2 = Sequel.connect(uri.to_s)
+        puts "With private ip: Database?: #{db2.test_connection}"
+      rescue => e
+        puts "Error connecting with private IP"
+        puts e.message
+        puts e.backtrace.join("\n")
+        return 1
+      end
+    end
+    [t1, t2].each(&:join)
+    puts "-"*80
+  end
+end
+
+run forever: true
