@@ -2,15 +2,12 @@
 
 require_relative "../lib/ferret"
 
-bash(retry: 2, name: :heroku_info_create, stdin: <<'EOF')
-  heroku info --app $TARGET_APP || {
-    heroku create $TARGET_APP                                             \
-      && heroku plugins:install https://github.com/heroku/manager-cli.git \
-      && heroku manager:transfer --app $TARGET_APP --to $ORG
-  }
-EOF
+uses_app empty:true
 
-bash(name: :clone, pattern: /cloned an empty repository/, stdin: <<'EOF')
+run_every_time do
+  bash(name: :clone, pattern: /cloned an empty repository/, stdin: <<'EOF')
   rm -rf ./app
-  git clone ssh://git@gitproxy-default.herokussl.com:2222/$TARGET_APP.git
+  git clone ssh://git@gitproxy-default.herokussl.com:2222/$SERVICE_APP_NAME.git
 EOF
+end
+run forever: true

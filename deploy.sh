@@ -23,7 +23,7 @@ UNPRIVILEGED_HEROKU_API_KEY=$(heroku sudo user:info -x \
 echo "Cleaning up old deploy of $APP"
 
 heroku sudo --user ${UNPRIVILEGED_USER} apps:delete $APP --confirm $APP
-
+heroku sudo --user ${UNPRIVILEGED_USER} passes:add create-bamboo 
 
 heroku apps:create $APP 
 heroku manager:transfer --to $ORG --app ${APP}
