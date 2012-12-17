@@ -43,16 +43,15 @@ end
 def uses_app(path)
   ENV["APP_DIR"] = path
   bash(retry: 2, name: :setup, stdin: <<-'EOSTDIN')
-  heroku apps:delete $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME
-  heroku apps:create $SERVICE_APP_NAME                                       \
-  && heroku plugins:install https://github.com/heroku/manager-cli.git        \
-  && heroku manager:transfer --app $SERVICE_APP_NAME --to $ORG               \
-  && cd $APP_DIR                                                             \
-  && bundle install                                                          \
-  && heroku build -r $SERVICE_APP_NAME                                       \
-  && heroku scale web=1 --app $SERVICE_APP_NAME                              \
-  && cd $FERRET_DIR
-
+    heroku apps:delete $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME
+    heroku apps:create $SERVICE_APP_NAME                                       \
+    && heroku plugins:install https://github.com/heroku/manager-cli.git        \
+    && heroku manager:transfer --app $SERVICE_APP_NAME --to $ORG               \
+    && cd $APP_DIR                                                             \
+    && bundle install                                                          \
+    && heroku build -r $SERVICE_APP_NAME                                       \
+    && heroku scale web=1 --app $SERVICE_APP_NAME                              \
+    && cd $FERRET_DIR
   EOSTDIN
   #if setup has been defined use that
   #otherwise run basic deploy
@@ -153,9 +152,9 @@ def test(opts={}, &blk)
 end
 
 def log(data)
-  data.rmerge! $log_prefix
   data.rmerge! xid: Thread.current[:xid]
-
+  data.rmerge! $log_prefix 
+  
   data.reduce(out=String.new) do |s, tup|
     s << [tup.first, tup.last].join("=") << " "
   end
