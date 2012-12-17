@@ -32,7 +32,6 @@ class Hash
 end
 
 def run(opts={})
-  puts opts.inspect
   if opts[:forever]
     $threads.each(&:join)
   else
@@ -40,11 +39,22 @@ def run(opts={})
   end
 end
 
-def uses_app(path)
-  ENV["APP_DIR"] = path
+def uses_app(opts={})
+  ENV["APP_DIR"] = opts[:path]
+  ENV["STACK"] = "cedar"
+  if opts[:stack]
+    ENV["STACK"] = opts[:stac]
+  end
+  if opts[:empty]
+    bash(retry: 2, name: :setup, stdin: <<-"STDIN")
+      heroku apps:delete $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME        
+      heroku apps:create $SERVICE_APP_NAME -s $STACK                          
+    STDIN
+    return
+  end
   bash(retry: 2, name: :setup, stdin: <<-'EOSTDIN')
-    heroku apps:delete $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME
-    heroku apps:create $SERVICE_APP_NAME                                       \
+    heroku apps:delete $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME           
+    heroku apps:create $SERVICE_APP_NAME -s $STACK                             \
     && heroku plugins:install https://github.com/heroku/manager-cli.git        \
     && heroku manager:transfer --app $SERVICE_APP_NAME --to $ORG               \
     && cd $APP_DIR                                                             \

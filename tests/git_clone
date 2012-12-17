@@ -1,17 +1,7 @@
 #!/usr/bin/env ruby
-
 require_relative "../lib/ferret"
 
-bash(retry: 1, name: :setup, stdin: <<'EOF')
-  cd $FERRET_DIR/app/basic_http
-  rm /.git
-  heroku create $SERVICE_APP_NAME
-  git init
-  git add *
-  git commit -m "initial"
-  git push heroku master
-  cd $FERRET_DIR
-EOF
+uses_app empty:true
 
 run_every_time do
   bash(name: :clone, pattern: /cloned an empty repository/, stdin: <<'EOF')
