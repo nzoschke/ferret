@@ -55,7 +55,6 @@ def uses_app(opts={})
 
   bash(retry: 2, name: :release, stdin: <<-'EOSTDIN')
     cd $APP_DIR                                                       \
-    && bundle install                                                 \
     && heroku build -r $SERVICE_APP_NAME                              \
     && heroku scale web=1 --app $SERVICE_APP_NAME                     \
     && cd $FERRET_DIR
