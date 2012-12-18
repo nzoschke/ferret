@@ -41,30 +41,25 @@ end
 
 def uses_app(opts={})
   ENV["APP_DIR"] = opts[:path]
-  ENV["STACK"] = "cedar"
-  if opts[:stack]
-    ENV["STACK"] = opts[:stac]
-  end
-  if opts[:empty]
-    bash(retry: 2, name: :setup, stdin: <<-"STDIN")
-      heroku apps:delete $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME        
-      heroku apps:create $SERVICE_APP_NAME -s $STACK                          
-    STDIN
-    return
-  end
-  bash(retry: 2, name: :setup, stdin: <<-'EOSTDIN')
+  ENV["STACK"] = opts[:stack] || "cedar"
+
+  log fn: :uses_app, name: ENV["SERVICE_APP_NAME"], at: :enter
+
+  bash(retry: 2, name: :create, stdin: <<-'EOSTDIN')
     heroku apps:delete $SERVICE_APP_NAME --confirm $SERVICE_APP_NAME           
-    heroku apps:create $SERVICE_APP_NAME -s $STACK                             \
-    && heroku plugins:install https://github.com/heroku/manager-cli.git        \
-    && heroku manager:transfer --app $SERVICE_APP_NAME --to $ORG               \
-    && cd $APP_DIR                                                             \
-    && bundle install                                                          \
-    && heroku build -r $SERVICE_APP_NAME                                       \
-    && heroku scale web=1 --app $SERVICE_APP_NAME                              \
+    heroku apps:create $SERVICE_APP_NAME -s $STACK                    \
+    && heroku manager:transfer --app $SERVICE_APP_NAME --to $ORG
+  EOSTDIN
+
+  return if opts[:empty]
+
+  bash(retry: 2, name: :release, stdin: <<-'EOSTDIN')
+    cd $APP_DIR                                                       \
+    && bundle install                                                 \
+    && heroku build -r $SERVICE_APP_NAME                              \
+    && heroku scale web=1 --app $SERVICE_APP_NAME                     \
     && cd $FERRET_DIR
   EOSTDIN
-  #if setup has been defined use that
-  #otherwise run basic deploy
 end
 
 def run_interval(interval, &block)
@@ -90,6 +85,7 @@ def run_every_time(&block)
     }
   end
 end
+
 def bash(opts={})
   opts[:bash] = opts[:stdin]
   test(opts)
