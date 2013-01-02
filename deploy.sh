@@ -5,7 +5,7 @@ TARGET_APP_PATH=$1
 APP=$(whoami)
 ORG=ferret-dev
 UNPRIVILEGED_USER=heroku.ferret.dev@gmail.com
-TARGET_APP_NAME=$(echo $TARGET_APP_PATH | sed 's:[/._]:-:g')
+TARGET_APP_NAME=$(echo $TARGET_APP_PATH | sed -e 's:./::' -e 's:[/._]:-:g')
 APP=$APP-$TARGET_APP_NAME
 echo "Setting up ${TARGET_APP_NAME} from path ${TARGET_APP_PATH}"
 echo "Cleaning Procfile"
@@ -22,7 +22,7 @@ UNPRIVILEGED_HEROKU_API_KEY=$(heroku sudo user:info -x \
   | head -1)
 echo "Cleaning up old deploy of $APP"
 
-heroku sudo --user ${UNPRIVILEGED_USER} apps:delete $APP --confirm $APP
+heroku apps:delete $APP --confirm $APP
 heroku sudo --user ${UNPRIVILEGED_USER} passes:add create-bamboo 
 
 heroku apps:create $APP 
@@ -31,7 +31,8 @@ heroku config:set --app ${APP}                         \
   APP=$APP                                             \
   HEROKU_API_KEY=$UNPRIVILEGED_HEROKU_API_KEY          \
   APP_PREFIX=ferret-$(whoami)						   \
-  ORG=$ORG
+  ORG=$ORG                                             \
+  FREQ=1
 heroku build -b https://github.com/nzoschke/buildpack-ferret.git -r $APP
-heroku scale tester=1 --app ${APP}
-heroku drains:add --app ${APP} ${L2MET_URL}
+heroku scale tester=1 --app $APP
+heroku drains:add --app $APP $L2MET_URL

@@ -68,7 +68,7 @@ def run_interval(interval, &block)
         Thread.current[:xid] = SecureRandom.hex(4)
         block.call
       }
-      sleep interval * 10
+      sleep interval * ENV["FREQ"].to_i
     }
   end
 end
@@ -80,7 +80,7 @@ def run_every_time(&block)
         Thread.current[:xid] = SecureRandom.hex(4)
         block.call
       }
-      sleep 10
+      sleep ENV["FREQ"].to_i
     }
   end
 end

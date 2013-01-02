@@ -1,5 +1,6 @@
 # Ferret
 
+Addons test use postgres URL to test warm up
 
 
 
