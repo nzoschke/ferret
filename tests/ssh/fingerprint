@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+require_relative "../../lib/ferret"
+
+
+run_every_time do
+bash(name: :invalid, pattern: /fingerprint/, status: nil, stdin: <<'EOF')
+  ssh git@heroku.com "git-receive-pack 'blog.git'"
+EOF
+end
+
+run forever:true

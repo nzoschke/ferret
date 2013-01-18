@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require_relative "../../lib/ferret"
+
+run_every_time do
+bash(name: :invalid, pattern: / !/, status: nil, stdin: <<'EOF')
+  ssh git@heroku.com true
+EOF
+end
+
+run forever:true
