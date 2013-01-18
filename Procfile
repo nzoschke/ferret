@@ -1,1 +1,1 @@
-tester: tests/perf_network
+tester: tests/ssh

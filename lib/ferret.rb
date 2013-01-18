@@ -120,7 +120,7 @@ def test(opts={}, &blk)
           status = $?.exitstatus
           out    = r1.read
         else
-          status = yield ? 0 : 1
+          status = (yield source) ? 0 : 1
           out = ""
         end
 
