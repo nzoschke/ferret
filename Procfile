@@ -1,1 +1,1 @@
-testsdnsresolve: tests/dns/resolve
+testsdnsresolve: ruby tests/dns/resolve
