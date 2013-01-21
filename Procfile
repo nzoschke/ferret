@@ -1,1 +1,1 @@
-worker: tests/dns/resolve
+worker: echo "tets"
