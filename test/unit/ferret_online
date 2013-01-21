@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+require_relative "test_helper"
+
+class TestFerretOnline < TestBase
+  def test_bash_heroku_list
+    bash(name: :list, stdin: <<-'EOF')
+      heroku list
+    EOF
+
+    assert_equal logs, <<EOF
+app=ferret-test.ferret_online xid=deadbeef fn=list i=0 at=enter
+app=ferret-test.ferret_online xid=deadbeef fn=list i=0 status=0 measure=list.success
+app=ferret-test.ferret_online xid=deadbeef fn=list i=0 at=return val=X unit=s measure=list.time
+EOF
+  end
+end

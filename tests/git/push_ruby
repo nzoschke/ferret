@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require_relative "../../lib/ferret"
 
+
 uses_app path: "#{ENV["FERRET_DIR"]}/app/basic_http"
 
 bash(name: :git_init, stdin: <<-'EOSTDIN')

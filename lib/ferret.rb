@@ -14,7 +14,7 @@ ENV["NAME"]               ||= File.basename($0, File.extname($0)) # e.g. git_pus
 ENV["SERVICE_LOG_NAME"]   ||= "#{ENV["APP_PREFIX"]}.#{ENV["NAME"]}" # e.g. ferret-noah.git-push #slave app name
 ENV["SERVICE_APP_NAME"]   ||= ENV["SERVICE_LOG_NAME"].gsub(/[\._]/, '-') # e.g. ferret-noah-git-push #used for deploying slave app
 
-$log_prefix               ||= { app: "#{ENV["ORG"]}.#{ENV["APP"]}"}
+$log_prefix               ||= { app: "#{ENV["APP"]}"}
 $logdevs                  ||= [$stdout, IO.popen("logger", "w")]
 $threads                    = []
 $lock                       = Mutex.new
@@ -37,6 +37,14 @@ def run(opts={})
   else
     sleep opts[:time]
   end
+end
+
+def test_name(name)
+  ENV["NAME"] = name
+end
+
+def test_freq(freq)
+  ENV["FREQ"] = freq.to_s
 end
 
 def uses_app(opts={})

@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
-ENV["SERVICE_APP_NAME"]="f-git-clone-bamboo"
+
 require_relative "../../lib/ferret"
-uses_app empty:true, stack:"bamboo"
+
+
+uses_app empty:true, stack:"bamboo", name:"git-clone-bamboo"
 
 run_every_time do
   bash(name: :clone, pattern: /cloned an empty repository/, stdin: <<'EOF')

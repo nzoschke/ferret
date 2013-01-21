@@ -3,7 +3,7 @@
 require_relative "../lib/ferret"
 
 run_every_time do
-  bash(name: :dd, stdin: <<'EOF')
+  bash(name: :dd, stdin: <<-'EOF')
   if [ ! -f /tmp/o ]; then
     if [ "$(uname)" = "Darwin" ]; then
       dd if=/dev/zero of=/tmp/o bs=10000000 count=2
@@ -11,14 +11,14 @@ run_every_time do
       dd if=/dev/zero of=/tmp/o bs=10M count=2 oflag=direct,sync
       fi
       fi
-EOF
+  EOF
 end
 
 
   run_every_time do
-    bash(name: :curl, stdin: <<'EOF')
+    bash(name: :curl, stdin: <<-'EOF')
     curl -i -X PUT http://ferretapp.s3.amazonaws.com/perf_network --data-binary @/tmp/o
-EOF
+  EOF
   end
 
   run forever: true

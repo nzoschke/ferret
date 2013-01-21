@@ -2,6 +2,8 @@
 
 require_relative "../../lib/ferret"
 
+test_freq 30
+
 run_every_time do
 bash(name: :invalid, pattern: / !/, status: nil, stdin: <<'EOF')
   ssh git@heroku.com true

@@ -1,0 +1,132 @@
+#!/usr/bin/env ruby
+require_relative "test_helper"
+
+class TestFerret < TestBase
+  def test_bash_true
+    bash(name: :true, stdin: <<-'EOF')
+      true
+    EOF
+
+    assert_equal logs, <<EOF
+app=ferret-test.ferret xid=deadbeef fn=true i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=true i=0 status=0 measure=ferret-test.ferret.true.success
+app=ferret-test.ferret xid=deadbeef fn=true i=0 val=100 measure=ferret-test.ferret.true.uptime
+app=ferret-test.ferret xid=deadbeef fn=true i=0 at=return val=X.Y measure=ferret-test.ferret.true.time
+EOF
+  end
+
+  def test_bash_false
+    assert_raises(SystemExit) do
+      bash(name: :false, stdin: <<-'EOF')
+        false
+      EOF
+    end
+
+    assert_equal logs, <<EOF
+app=ferret-test.ferret xid=deadbeef fn=false i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=false i=0 status=1 measure=ferret-test.ferret.false.failure
+app=ferret-test.ferret xid=deadbeef fn=false i=0 val=0 measure=ferret-test.ferret.false.uptime
+app=ferret-test.ferret xid=deadbeef fn=false i=0 at=return val=X.Y
+EOF
+  end
+
+  def test_bash_retry
+    assert_raises(SystemExit) do
+      bash(retry: 2, name: :false, stdin: <<-'EOF')
+        false
+      EOF
+    end
+
+    assert_equal logs, <<EOF
+app=ferret-test.ferret xid=deadbeef fn=false i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=false i=0 status=1
+app=ferret-test.ferret xid=deadbeef fn=false i=0 at=return val=X.Y
+app=ferret-test.ferret xid=deadbeef fn=false i=1 at=enter
+app=ferret-test.ferret xid=deadbeef fn=false i=1 status=1 measure=ferret-test.ferret.false.failure
+app=ferret-test.ferret xid=deadbeef fn=false i=1 val=0 measure=ferret-test.ferret.false.uptime
+app=ferret-test.ferret xid=deadbeef fn=false i=1 at=return val=X.Y
+EOF
+  end
+
+  def test_bash_status
+    bash(name: :nonzero, status: 128, stdin: <<-'EOF')
+      exit 128
+    EOF
+
+    assert_equal logs, <<EOF
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 status=128 measure=ferret-test.ferret.nonzero.success
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 val=100 measure=ferret-test.ferret.nonzero.uptime
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=return val=X.Y measure=ferret-test.ferret.nonzero.time
+EOF
+  end
+
+  def test_bash_status_nil
+    bash(name: :nonzero, status: nil, stdin: <<-'EOF')
+      exit 128
+    EOF
+
+    assert_equal logs, <<EOF
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 status=128 measure=ferret-test.ferret.nonzero.success
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 val=100 measure=ferret-test.ferret.nonzero.uptime
+app=ferret-test.ferret xid=deadbeef fn=nonzero i=0 at=return val=X.Y measure=ferret-test.ferret.nonzero.time
+EOF
+  end
+
+  def test_bash_pattern_true
+    bash(name: :grep, pattern: /hi/, stdin: <<-'EOF')
+      echo hi
+    EOF
+
+    assert_equal logs, <<EOF
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=0 measure=ferret-test.ferret.grep.success
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 val=100 measure=ferret-test.ferret.grep.uptime
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=return val=X.Y measure=ferret-test.ferret.grep.time
+EOF
+  end
+
+  def test_bash_pattern_false
+    assert_raises(SystemExit) do
+      bash(name: :grep, pattern: /hi/, stdin: <<-'EOF')
+        echo hello
+      EOF
+    end
+
+    assert_equal logs, <<EOF
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=failure out='hello'
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=0 measure=ferret-test.ferret.grep.failure
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 val=0 measure=ferret-test.ferret.grep.uptime
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=return val=X.Y
+EOF
+  end
+
+  def test_bash_pattern_status
+    bash(name: :grep, pattern: /hi/, status: nil, stdin: <<-'EOF')
+      echo hi
+      exit 1
+    EOF
+
+    assert_equal logs, <<EOF
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 status=1 measure=ferret-test.ferret.grep.success
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 val=100 measure=ferret-test.ferret.grep.uptime
+app=ferret-test.ferret xid=deadbeef fn=grep i=0 at=return val=X.Y measure=ferret-test.ferret.grep.time
+EOF
+  end
+
+  def test_timeout
+    assert_raises(SystemExit) do
+      bash(name: :timeout, timeout: 0.01, stdin: <<-'EOF')
+        sleep 2
+      EOF
+    end
+
+    assert_equal logs, <<EOF
+app=ferret-test.ferret xid=deadbeef fn=timeout i=0 at=enter
+app=ferret-test.ferret xid=deadbeef fn=timeout at=timeout val=X.Y
+EOF
+  end
+end

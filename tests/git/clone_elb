@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require_relative "../../lib/ferret"
 
+
 uses_app empty:true
 
 run_every_time do

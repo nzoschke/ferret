@@ -2,9 +2,9 @@
 require_relative "../../lib/ferret"
 
 run_every_time do
-bash(name: :redirect, pattern: /302 Found/, stdin: <<'EOF')
-  curl -i -b user_session_secret=foo https://dashboard.heroku.com/apps/dashboard
-EOF
+  bash(name: :redirect, pattern: /302 Found/, stdin: <<-'EOF')
+    curl -i -b user_session_secret=foo https://dashboard.heroku.com/apps/dashboard
+  EOF
 end
 
 run forever:true
