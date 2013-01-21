@@ -1,1 +1,1 @@
-testsdnsresolve: ruby tests/dns/resolve
+worker: tests/dns/resolve

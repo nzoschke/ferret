@@ -1,9 +1,10 @@
 TARGET_APP_PATH=$1
 TARGET_FILES=$(find $TARGET_APP_PATH -type f)
-rm Procfile
-touch Procfile
+SCALE_CMD=""
 for f in $TARGET_FILES*
 do
     FERRET_NAME=$(echo $f | sed -e 's:\./::' -e 's:[/._]:-:g')
-    echo "$FERRET_NAME: $f" >> Procfile
+    SCALE_CMD="$SCALE_CMD $FERRET_NAME=$2"
 done
+echo $SCALE_CMD
+heroku scale $SCALE_CMD
