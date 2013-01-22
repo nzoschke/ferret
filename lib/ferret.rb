@@ -2,6 +2,8 @@ require "fileutils"
 require "securerandom"
 require "timeout"
 require "tmpdir"
+require "redis"
+
 
 ENV["APP"]                ||= "ferret"
 ENV["FERRET_DIR"]         ||= File.expand_path(File.join(__FILE__, "..", ".."))
@@ -9,11 +11,12 @@ ENV["ORG"]                ||= "ferret-dev"
 ENV["SCRIPT"]             ||= File.expand_path($0) # $FERRET_DIR/tests/git/push or $FERRET_DIR/tests/unit/test_ferret.rb
 ENV["TEMP_DIR"]           ||= Dir.mktmpdir
 Thread.current[:xid]         = SecureRandom.hex(4)
-ENV["FREQ"]               ||= "10"
+ENV["FREQ"]               ||= "30"
 ENV["NAME"]               ||= File.basename($0, File.extname($0)) # e.g. git_push
 ENV["SERVICE_LOG_NAME"]   ||= "#{ENV["APP"]}.#{ENV["NAME"]}" # e.g. ferret-noah.git-push #slave app name
 ENV["SERVICE_APP_NAME"]   ||= ENV["USER"] + "-" + ENV["SERVICE_LOG_NAME"].gsub(/[\._]/, '-') # e.g. ferret-noah-git-push #used for deploying slave app
 
+$redis                      = Redis.connect :url => ENV["OPENREDIS_URL"]
 $log_prefix               ||= { app: "#{ENV["APP"]}"}
 $logdevs                  ||= [$stdout, IO.popen("logger", "w")]
 $threads                    = []
@@ -137,13 +140,20 @@ def test(opts={}, &blk)
         success &&= !!(out =~ opts[:pattern]) if opts[:pattern]
 
         if success
+          Thread.current[:failcount] = 0
           log source: source, i: i, status: status, measure: "success"
           log source: source, i: i, val: 100, measure: "uptime"
           log source: source, i: i, at: :return, val: "%0.4f" % (Time.now - start), measure: "time"
+          redis.set(source,"up")
           return success # break out of retry loop
         else
+          Thread.current[:failcount] = Thread.current[:failcount]+1
+          redis.set(source,"yellow")
           out.each_line { |l| log source: source, i: i, at: :failure, out: "'#{l.strip}'" }
 
+          if Thread.current[:failcount] > 5 do
+            redis.set(source,"down")
+          end
           # only measure last failure
           if i == opts[:retry] - 1
             log source: source, i: i, status: status, measure: "failure"
