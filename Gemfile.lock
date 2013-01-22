@@ -1,10 +1,12 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    sequel (3.42.0)
+    redis (3.0.2)
+    sequel (3.43.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  redis
   sequel
