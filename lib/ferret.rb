@@ -151,7 +151,7 @@ def test(opts={}, &blk)
           redis.set(source,"yellow")
           out.each_line { |l| log source: source, i: i, at: :failure, out: "'#{l.strip}'" }
 
-          if Thread.current[:failcount] > 5 do
+          if Thread.current[:failcount] > 5 
             redis.set(source,"down")
           end
           # only measure last failure
