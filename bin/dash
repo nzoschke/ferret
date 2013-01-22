@@ -2,8 +2,10 @@
 require 'redis'
 redis = Redis.connect :url => ENV["OPENREDIS_URL"]
 
-status =  redis.keys()
+status =  redis.keys
+status = status.sort
 for k in status do
-  val = redis.get(k)
+  val = redis.get k
+   
   puts "#{k}    #{val}"
 end

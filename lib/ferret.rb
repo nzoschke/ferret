@@ -144,15 +144,15 @@ def test(opts={}, &blk)
           log source: source, i: i, status: status, measure: "success"
           log source: source, i: i, val: 100, measure: "uptime"
           log source: source, i: i, at: :return, val: "%0.4f" % (Time.now - start), measure: "time"
-          redis.set(source,"up")
+          $redis.set(source,"up")
           return success # break out of retry loop
         else
           Thread.current[:failcount] = Thread.current[:failcount]+1
-          redis.set(source,"yellow")
+          $redis.set(source,"yellow")
           out.each_line { |l| log source: source, i: i, at: :failure, out: "'#{l.strip}'" }
 
           if Thread.current[:failcount] > 5 
-            redis.set(source,"down")
+            $redis.set(source,"down")
           end
           # only measure last failure
           if i == opts[:retry] - 1
