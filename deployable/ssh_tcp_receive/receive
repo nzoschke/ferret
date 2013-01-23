@@ -1,0 +1,31 @@
+#!/bin/bash
+
+curl -i -X PUT http://ferretapp.s3.amazonaws.com/ssh_tcp_receive_user -d $USER
+
+ssh-keygen -f /tmp/ssh_host_dsa_key -P "" -t dsa
+
+cat >/tmp/authorized_keys <<'EOF'
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAwQxZYQj7dJphbWppMnX9j7CB8NRBefvDp2fAZsUWHoiyeU5nUtE9yeJ4doV9ZTZCBgLS93Kdq7UO86wfKM29l+kTcDcUuRerT2YLfPH6Z0auDb3ysRoJXlIQXoW/otA/pW+OXZxBquLs773Dj7LZCTR3GFxFUc9418SF2VPKYAlPTJl9m3F56meENR3hxFqJRu6e2rWlsRuC59+Ug9psblRlrabk+YTM6GZFutT7K9GKbmdVmaxNXwJS+rESjVYBlT87qhhK18hKkNteEbwsBeBY2IlrCWtFPsIjjhn0Mm+tzPkVIRyHXrBleGRU/3UAarCH/YhF9hnw2y6uV9pSSw== gitproxy@heroku
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEArDKFpp91aWdL3JIshoM3EC6odeOg4mAfI2MgORpvUPdwqY/tDnZTY+eSdQhGrsZAj5bjsRn2xgbewJmM12Hcwjk1qBe0ZNhA4yOrFxvoxAdI+vNQ9Jjqx7FmdXO8P7U1Q7aX/UcHY92JWYV1BkOZjGPRmFzT4AvBLMa3tpmZkpX5X4mYgXMW2CpA3gI0MeoGbm9LvrDAy6/PAroagvlwFwpH8I0toRSeoMSLoknn7FP1Yr89vpbZiQ7nP1kTldTilGmt/vJwJ3kO9aLeFPcUtel7cYvCEX3T+rm7VESZ6gEXUg8d0HVBzNtdu7pGYYBrb9ihGGcsvfsb6QReH2fsxw== noah@Hero-Jr.local
+EOF
+
+cat >/tmp/sshd_config <<EOF
+Protocol 2
+Port $PORT
+AuthorizedKeysFile /tmp/authorized_keys
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+UsePAM no
+PermitRootLogin no
+AllowUsers $USER
+LoginGraceTime 20
+LogLevel DEBUG3
+PidFile /tmp/sshd.pid
+HostKey /tmp/ssh_host_dsa_key
+UsePrivilegeSeparation no
+PermitUserEnvironment yes
+AcceptEnv DEV_PATH GEM_HOME GEM_PATH
+ForceCommand /app/shell
+EOF
+
+/usr/sbin/sshd -D -e -f /tmp/sshd_config 2>&1
