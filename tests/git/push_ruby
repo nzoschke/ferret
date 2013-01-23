@@ -8,6 +8,8 @@ bash(name: :git_init, stdin: <<-'EOSTDIN')
   rm -rf ./app
   cp -r $FERRET_DIR/app/basic_http ./app
   cd ./app
+  git config --global user.email "me@here.com"
+  git config --global user.name "ferret"
   git init && git add . && git commit -m "init"
 EOSTDIN
 
