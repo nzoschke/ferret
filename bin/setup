@@ -44,6 +44,7 @@ echo Creating monitor app...
   set -x
   heroku create $APP
   heroku manager:transfer --app $APP --to $ORG
+  heroku build . -r $APP -b https://github.com/nzoschke/buildpack-ferret
 ) 2>&1 | sed "s/^/  /"
 
 echo Adding features...
