@@ -1,40 +1,57 @@
 #!/bin/bash
 source bin/ferret.sh
 
-run "Installing heroku plugins..." <<'EOF'
-  heroku plugins:install https://github.com/ddollar/heroku-push
+echo Installing heroku plugins...
+(
+  heroku plugins:install https://github.com/ddollar/heroku-anvil
   heroku plugins:install https://github.com/heroku/manager-cli.git
-EOF
+) | sed "s/^/  /"
 
-run "Sourcing env.sample for .env..." <<'EOF'
+echo Sourcing env.sample for .env...
+(
   env -i HOME=$HOME bash -x -c "source env.sample" 2>&1 | awk '$1 == "++" {print $2}' > .env
   cat .env
-EOF
+) | sed "s/^/  /"
 
-run "Managing org..." <<'EOF'
+echo Managing org...
+(
   export $(cat .env)
   unset HEROKU_API_KEY
 
   set -x
   heroku manager:add_user --org $ORG --user heroku.ferret.dev@gmail.com --role admin
-EOF
+) 2>&1 | sed "s/^/  /"
 
-run "Creating monitor app..." <<'EOF'
+echo Creating service apps...
+(
+  export $(cat .env)
+
+  for s in services/*; do
+    SERVICE_APP=$APP-$(basename $s)
+    (
+      set -x
+      heroku create $SERVICE_APP --remote s
+      heroku manager:transfer --app $SERVICE_APP --to $ORG
+      heroku build $s -r $SERVICE_APP
+    )
+  done
+) 2>&1 | sed -l "s/^/  /"
+
+echo Creating monitor app...
+(
   export $(cat .env)
 
   set -x
   heroku create $APP
   heroku manager:transfer --app $APP --to $ORG
-EOF
+) 2>&1 | sed "s/^/  /"
 
-run "Creating service apps..." <<'EOF'
-  ls services/*
-EOF
-
-run "Managing features..." <<'EOF'
+echo Adding features...
+(
   export $(cat .env)
   unset HEROKU_API_KEY
 
   set -x
   heroku sudo passes:add logplex-beta-program --app $APP
-EOF
+) 2>&1 | sed "s/^/  /"
+
