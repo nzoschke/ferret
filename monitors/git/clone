@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+require_relative "../../lib/ferret"
+
+run_every_time do
+  bash(name: :clone, pattern: /cloned an empty repository/, stdin: <<-'EOF')
+    rm -rf ./app
+    git clone git@heroku.com:$APP-git.git ./app
+  EOF
+end
+
+run forever: true
