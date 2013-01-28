@@ -11,7 +11,7 @@ run "Managing user..." <<'EOF'
   unset HEROKU_API_KEY
 
   set -x
-  heroku members:add $HEROKU_USER_NAME --org $ORG --role admin
+  heroku members:add $HEROKU_USERNAME --org $ORG --role admin
   heroku sudo labs:enable create-bamboo --user $HEROKU_USERNAME
   heroku sudo labs:enable logplex-beta-program --user $HEROKU_USERNAME
 EOF
