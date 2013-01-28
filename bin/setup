@@ -36,6 +36,7 @@ run "Creating monitor app..." <<'EOF'
 
   set -x
   heroku create $APP --org $ORG
+  heroku config:set APP=$APP HEROKU_API_KEY=$HEROKU_API_KEY
   heroku build . -r $APP -b https://github.com/nzoschke/buildpack-ferret.git
 EOF
 
