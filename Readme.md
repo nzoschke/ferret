@@ -17,22 +17,18 @@ Heroku account.
 ```bash
 bin/setup
 
-# Run all tests
+# Run all monitors
 foreman start
 
-# Run tests with increased concurrency
-foreman start --formation="monitors_git_clone=2"
+# Run monitors with increased concurrency
+foreman start --formation="monitor_git_clone=2"
 ```
 
 ## Platform Setup
 
 ```bash
-# 
-cp env.sample .env
-foreman run bin/setup.sh
-
 # Build and release the app
-foreman run heroku build -b https://github.com/nzoschke/buildpack-ferret.git -r ferret-$FERRET_USER
+foreman run heroku build -b https://github.com/nzoschke/buildpack-ferret.git -r $APP
 ```
 
 ## Philosophy
