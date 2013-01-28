@@ -29,6 +29,8 @@ run "Creating service apps..." <<'EOF'
     )
     echo
   done
+
+  git remote rm s
 EOF
 
 run "Creating monitor app..." <<'EOF'
