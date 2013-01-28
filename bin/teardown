@@ -11,5 +11,6 @@ echo Destroying monitor and service apps...
       set -x
       heroku destroy $APP
     )
+    echo
   done
 ) 2>&1 | sed "s/^/  /"
