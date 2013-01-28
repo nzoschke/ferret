@@ -1,9 +1,0 @@
-#!/bin/bash
-
-printf "connect\n"
-
-printf "wait"
-for i in {1..30}; do printf "."; sleep 1; done
-printf "\n"
-
-printf "disconnect\n"

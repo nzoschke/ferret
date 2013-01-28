@@ -4,26 +4,34 @@ require "timeout"
 require "tmpdir"
 require "redis"
 require "statsample"
+require "td"
 
 $redis                      = Redis.connect :url => ENV["OPENREDIS_URL"]
+TreasureData::Logger.open('ferret_database',
+                          :apikey=>ENV['TREASURE_DATA_API_KEY'],
+                          :auto_create_table=>true)
 
 
-$name = ENV["NAME"]               ||= File.basename($0, File.extname($0)) # e.g. git_push
+ENV["NAME"]               ||= File.basename($0, File.extname($0)) # e.g. git_push
 ENV["APP"]                ||= "ferret"
 ENV["FERRET_DIR"]         ||= File.expand_path(File.join(__FILE__, "..", ".."))
 ENV["ORG"]                ||= "ferret-dev"
 ENV["SCRIPT"]             ||= File.expand_path($0) # $FERRET_DIR/tests/git/push or $FERRET_DIR/tests/unit/test_ferret.rb
+
 ENV["TEMP_DIR"]           ||= Dir.mktmpdir
-ENV["FREQ"].to_i          || 30.to_s
+ENV["FREQ"].to_i          ||= 30.to_s
 ENV["INTERVAL"]           ||= 240.to_s #how long to track for in seconds when doing math (time-series window)
 Thread.current[:xid]        = SecureRandom.hex(4)
 ENV["SERVICE_LOG_NAME"]   ||= "#{ENV["APP"]}.#{ENV["NAME"]}" # e.g. ferret-noah.git-push #slave app name
 ENV["SERVICE_APP_NAME"]   ||= ENV["USER"] + "-" + ENV["SERVICE_LOG_NAME"].gsub(/[\._]/, '-') # e.g. ferret-noah-git-push #used for deploying slave app
 
+script = ENV["SCRIPT"].chomp(File.extname(ENV["SCRIPT"]))           # strip extension
+script = script.split("/").last(2).join("/")                        # e.g. git/push or unit/test_ferret
 $log_prefix               ||= { app: "#{ENV["APP"]}"}
 $logdevs                  ||= [$stdout, IO.popen("logger", "w")]
 $threads                    = []
 $lock                       = Mutex.new
+$name                       = source = "#{script}".gsub(/\//, ".").gsub(/_/, "-")  # e.g. git.push.test
 
 if !$redis.hexists($name,"app")
   $redis.hset($name,"app",ENV["APP"])
@@ -49,7 +57,7 @@ class Hash
 end
 
 def dostats()
-  lasttime  = Thread.current[:lasttime] || 0
+  lasttime  = Thread.current[:lasttime] || Time.now.to_i-$interval
   drop      = (Time.now.to_i - lasttime)/$interval
   uptimesa   = Thread.current[:uptimes]
   timesa     = Thread.current[:times]
@@ -70,20 +78,20 @@ def dostats()
 
   uaveragesa << times.mean
   taveragesa << uptimes.mean
+  hash        = Thread.current[:source]
+  $redis.hset("#{hash}", "uptime.mean", uptimes.mean)
+  $redis.hset("#{hash}", "uptime.min", uptimes.min)
+  $redis.hset("#{hash}", "uptime.max", uptimes.max)
+  $redis.hset("#{hash}", "uptime.last", uptimesa.last)
+  $redis.hset("#{hash}", "uptime.average_variance", uaverages.variance)
+  $redis.hset("#{hash}", "uptime.variance", uptimes.variance)
 
-  $redis.hset($name, "#{Thread.current[:name]}.uptime.mean", uptimes.mean)
-  $redis.hset($name, "#{Thread.current[:name]}.uptime.min", uptimes.min)
-  $redis.hset($name, "#{Thread.current[:name]}.uptime.max", uptimes.max)
-  $redis.hset($name, "#{Thread.current[:name]}.uptime.last", uptimesa.last)
-  $redis.hset($name, "#{Thread.current[:name]}.uptime.average_variance", uaverages.variance)
-  $redis.hset($name, "#{Thread.current[:name]}.uptime.variance", uptimes.variance)
-
-  $redis.hset($name, "#{Thread.current[:name]}.time.mean", times.mean)
-  $redis.hset($name, "#{Thread.current[:name]}.time.min", times.min)
-  $redis.hset($name, "#{Thread.current[:name]}.time.max", times.max)
-  $redis.hset($name, "#{Thread.current[:name]}.time.last", timesa.last)
-  $redis.hset($name, "#{Thread.current[:name]}.time.variance", times.variance)
-  $redis.hset($name, "#{Thread.current[:name]}.time.average_variance", taverages.variance)
+  $redis.hset("#{hash}", "time.mean", times.mean)
+  $redis.hset("#{hash}", "time.min", times.min)
+  $redis.hset("#{hash}", "time.max", times.max)
+  $redis.hset("#{hash}", "time.last", timesa.last)
+  $redis.hset("#{hash}", "time.variance", times.variance)
+  $redis.hset("#{hash}", "time.average_variance", taverages.variance)
   Thread.current[:lasttime] = Time.now.to_i
 end
 
@@ -119,7 +127,7 @@ def uses_app(opts={})
 
   bash(retry: 2, name: :release, stdin: <<-'EOSTDIN')
     cd $APP_DIR                                                       \
-    && heroku build -r $SERVICE_APP_NAME                              \
+    && git init && git add * && git commit -m "init" && git push  git@heroku.com:${SERVICE_APP_NAME}.git                              \
     && heroku scale web=1 --app $SERVICE_APP_NAME                     \
     && cd $FERRET_DIR
   EOSTDIN
@@ -171,7 +179,7 @@ def test(opts={}, &blk)
   script = script.split("/").last(2).join("/")                        # e.g. git/push or unit/test_ferret
   ENV["TARGET_APP"] = "#{ENV["APP"]}-#{script}".gsub(/[\/_]/, "-")    # e.g. ferret-git-push or ferret-unit-test-ferret
   source = "\"#{script}.#{opts[:name]}\"".gsub(/\//, ".").gsub(/_/, "-")  # e.g. git.push.test
-  Thread.current[:name] = opts[:name]
+  Thread.current[:source] = source.gsub("\"","")
   begin
     Timeout.timeout(opts[:timeout]) do
       opts[:retry].times do |i|
@@ -234,8 +242,8 @@ def test(opts={}, &blk)
           log source: source, i: i, at: :return, val: "%0.4f" % (Time.now - start)
         end
       end
-      dostats
     end
+    dostats
   rescue Timeout::Error
     log source: source, at: :timeout, val: opts[:timeout]
     if opts[:pid]
@@ -247,11 +255,11 @@ end
 
 def log(data)
   data.rmerge! xid: Thread.current[:xid]
-  data.rmerge! $log_prefix 
-  
+  data.rmerge! $log_prefix
   data.reduce(out=String.new) do |s, tup|
     s << [tup.first, tup.last].join("=") << " "
   end
-
+  data[:source] = data[:source].gsub("\"", "")
+  TD.event.post(ENV["NAME"], data)
   $logdevs.each { |l| l << out.strip + "\n" }
 end

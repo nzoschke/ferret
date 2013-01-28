@@ -1,3 +1,4 @@
+web: app/web.rb -p $PORT
 tests_dns_resolve: ./tests/dns/resolve
 tests_git_clone: ./tests/git/clone
 tests_git_clone_bamboo: ./tests/git/clone_bamboo

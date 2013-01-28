@@ -6,7 +6,7 @@ uses_app path: "#{ENV["FERRET_DIR"]}/deployable/basic_http"
 
 bash(name: :git_init, stdin: <<-'EOSTDIN')
   rm -rf ./app
-  cp -r $FERRET_DIR/app/basic_http ./app
+  cp -r $FERRET_DIR/deployable/basic_http ./app
   cd ./app
   git config --global user.email "me@here.com"
   git config --global user.name "ferret"
@@ -18,6 +18,9 @@ run_every_time do
     cd ./app
     git commit --allow-empty -m "empty"
     git push -f git@heroku.com:$SERVICE_APP_NAME.git master
+    if [ $? -eq 2 ] ; then
+       echo "success"
+    fi
   EOSTDIN
 end
 

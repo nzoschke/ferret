@@ -6,8 +6,14 @@ GEM
     distribution (0.7.0)
     extendmatrix (0.3.1)
     fastercsv (1.5.5)
+    fluent-logger (0.4.4)
+      msgpack (= 0.4.7)
+      yajl-ruby (~> 1.0)
+    hirb (0.7.1)
+    json (1.7.6)
     minimization (0.2.1)
       text-table (~> 1.2)
+    msgpack (0.4.7)
     prawn (0.8.4)
       prawn-core (>= 0.8.4, < 0.9)
       prawn-layout (>= 0.8.4, < 0.9)
@@ -17,6 +23,9 @@ GEM
     prawn-security (0.8.4)
     prawn-svg (0.9.1.11)
       prawn (>= 0.8.4)
+    rack (1.4.1)
+    rack-protection (1.3.2)
+      rack
     redis (3.0.2)
     reportbuilder (1.4.2)
       clbustos-rtf (~> 0.4.0)
@@ -27,6 +36,10 @@ GEM
     ruby-ole (1.2.11.6)
     rubyvis (0.5.2)
     sequel (3.43.0)
+    sinatra (1.3.3)
+      rack (~> 1.3, >= 1.3.6)
+      rack-protection (~> 1.2)
+      tilt (~> 1.3, >= 1.3.3)
     spreadsheet (0.6.9)
       ruby-ole (>= 1.0)
     statsample (1.2.0)
@@ -42,7 +55,21 @@ GEM
       statsample-bivariate-extension (> 0)
     statsample-bivariate-extension (1.1.0)
       distribution (~> 0.6)
+    td (0.10.61)
+      hirb (>= 0.4.5)
+      msgpack (~> 0.4.4)
+      td-client (~> 0.8.37)
+      td-logger (~> 0.3.16)
+    td-client (0.8.45)
+      json (~> 1.7.6)
+      msgpack (~> 0.4.4)
+    td-logger (0.3.18)
+      fluent-logger (~> 0.4.1)
+      msgpack (= 0.4.7)
+      td-client (~> 0.8.4)
     text-table (1.2.2)
+    tilt (1.3.3)
+    yajl-ruby (1.1.0)
 
 PLATFORMS
   ruby
@@ -50,4 +77,6 @@ PLATFORMS
 DEPENDENCIES
   redis
   sequel
+  sinatra
   statsample
+  td (~> 0.10.22)

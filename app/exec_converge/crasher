@@ -1,4 +1,0 @@
-#!/bin/bash
-
-curl -is -X PUT http://ferretapp.s3.amazonaws.com/exec_converge_up_at -d "$(date)"
-exit 1

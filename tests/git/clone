@@ -1,14 +1,12 @@
 #!/usr/bin/env ruby
 require_relative "../../lib/ferret"
 
-
 uses_app empty:true
 
 run_every_time do
   bash(name: :clone, pattern: /cloned an empty repository/, stdin: <<-'EOF')
     rm -rf ./app
-    echo $SERVICE_APP_NAME
-    git clone git@heroku.com:$SERVICE_APP_NAME.git ./app
+    git clone git@heroku.com:${SERVICE_APP_NAME}.git ./app
   EOF
 end
 

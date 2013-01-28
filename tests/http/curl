@@ -5,7 +5,7 @@ uses_app path: "#{ENV["FERRET_DIR"]}/deployable/basic_http"
 
 run_every_time do
   bash(name: :poll, timeout: 3900, stdin: <<-'EOSH')
-    curl --fail http://${SERVICE_APP_NAME}.herokuapp.com -v
+    curl --fail http://blog.herokuapp.com -v
   EOSH
 end
 
