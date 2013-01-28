@@ -2,14 +2,6 @@ require "fileutils"
 require "securerandom"
 require "timeout"
 require "tmpdir"
-require "redis"
-require "statsample"
-require "td"
-
-$redis                      = Redis.connect :url => ENV["OPENREDIS_URL"]
-TreasureData::Logger.open('ferret_database',
-                          :apikey=>ENV['TREASURE_DATA_API_KEY'],
-                          :auto_create_table=>true)
 
 
 ENV["NAME"]               ||= File.basename($0, File.extname($0)) # e.g. git_push
@@ -33,15 +25,6 @@ $threads                    = []
 $lock                       = Mutex.new
 $name                       = source = "#{script}".gsub(/\//, ".").gsub(/_/, "-")  # e.g. git.push.test
 
-if !$redis.hexists($name,"app")
-  $redis.hset($name,"app",ENV["APP"])
-  $redis.hset($name,"freq",ENV["FREQ"].to_i)
-  $redis.hset($name, "status","starting")
-  $redis.hset($name, "interval", ENV["INTERVAL"].to_i)
-
-end
-$freq = $redis.hget($name,"freq").to_i
-$interval = $redis.hget($name, "interval").to_i
 
 trap("EXIT") do
   log fn: :exit
@@ -54,45 +37,6 @@ class Hash
   def rmerge!(h)
     replace(h.merge(self))
   end
-end
-
-def dostats()
-  lasttime  = Thread.current[:lasttime] || Time.now.to_i-$interval
-  drop      = (Time.now.to_i - lasttime)/$interval
-  uptimesa   = Thread.current[:uptimes]
-  timesa     = Thread.current[:times]
-  uaveragesa = Thread.current[:uavarages]
-  taveragesa = Thread.current[:tavarages]
-  if drop > 0
-    uptimesa.slice!(0..drop)
-    timesa.slice!(0..drop)
-    uaveragesa.slice!(0..drop)
-    taveragesa.slice!(0..drop)
-  end
-
-
-  uaverages = uaveragesa.to_vector(:scale)
-  taverages = taveragesa.to_vector(:scale)
-  uptimes   = uptimesa.to_vector(:scale)
-  times     = timesa.to_vector(:scale)
-
-  uaveragesa << times.mean
-  taveragesa << uptimes.mean
-  hash        = Thread.current[:source]
-  $redis.hset("#{hash}", "uptime.mean", uptimes.mean)
-  $redis.hset("#{hash}", "uptime.min", uptimes.min)
-  $redis.hset("#{hash}", "uptime.max", uptimes.max)
-  $redis.hset("#{hash}", "uptime.last", uptimesa.last)
-  $redis.hset("#{hash}", "uptime.average_variance", uaverages.variance)
-  $redis.hset("#{hash}", "uptime.variance", uptimes.variance)
-
-  $redis.hset("#{hash}", "time.mean", times.mean)
-  $redis.hset("#{hash}", "time.min", times.min)
-  $redis.hset("#{hash}", "time.max", times.max)
-  $redis.hset("#{hash}", "time.last", timesa.last)
-  $redis.hset("#{hash}", "time.variance", times.variance)
-  $redis.hset("#{hash}", "time.average_variance", taverages.variance)
-  Thread.current[:lasttime] = Time.now.to_i
 end
 
 def run(opts={})
@@ -215,14 +159,8 @@ def test(opts={}, &blk)
           log source: source, i: i, status: status, measure: "success"
           log source: source, i: i, val: 100, measure: "uptime"
           log source: source, i: i, at: :return, val: "%0.4f" % (Time.now - start), measure: "time"
-          uptimes << 100
-          times << (Time.now - start)
-          $redis.hset($name,"#{Thread.current[:name]}.status","up")
-          $redis.hset($name,"status","up")
           return success # break out of retry loop
         else
-          $redis.hset($name, "#{Thread.current[:name]}.status" ,"yellow")
-          $redis.hset($name, "status", "yellow" )
           out.each_line { |l| log source: source, i: i, at: :failure, out: "'#{l.strip}'" }
 
           end
@@ -230,20 +168,15 @@ def test(opts={}, &blk)
           if i == opts[:retry] - 1
             log source: source, i: i, status: status, measure: "failure"
             log source: source, i: i, val: 0, measure: "uptime"
-            uptimes << 0
-            times << (Time.now - start)
             Thread.current[:failcount] = Thread.current[:failcount]+1
           if Thread.current[:failcount] > 5
-            $redis.hset($name,"#{Thread.current[:name]}.status","down")
-            $redis.hset($name,"status","down") 
-          else
+         else
             log source: source, i: i, status: status
           end
           log source: source, i: i, at: :return, val: "%0.4f" % (Time.now - start)
         end
       end
     end
-    dostats
   rescue Timeout::Error
     log source: source, at: :timeout, val: opts[:timeout]
     if opts[:pid]
@@ -259,7 +192,5 @@ def log(data)
   data.reduce(out=String.new) do |s, tup|
     s << [tup.first, tup.last].join("=") << " "
   end
-  data[:source] = data[:source].gsub("\"", "")
-  TD.event.post(ENV["NAME"], data)
   $logdevs.each { |l| l << out.strip + "\n" }
 end
