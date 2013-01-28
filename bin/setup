@@ -6,11 +6,6 @@ run "Installing heroku plugins..." <<'EOF'
   heroku plugins:install git@github.com:heroku/heroku-orgs.git
 EOF
 
-run "Sourcing env.sample for .env..." <<'EOF'
-  env -i HOME=$HOME bash -x -c "source env.sample" 2>&1 | awk '$1 == "++" {print $2}' > .env
-  cat .env
-EOF
-
 run "Managing user..." <<'EOF'
   export $(cat .env)
   unset HEROKU_API_KEY
