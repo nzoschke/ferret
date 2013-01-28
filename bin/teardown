@@ -6,7 +6,7 @@ echo Destroying monitor and service apps...
 (
   export $(cat .env)
 
-  for APP in $(heroku list | grep "^$APP" | cut -d" " -f1); do
+  for APP in $(heroku list --all --org $ORG | grep "^$APP" | cut -d" " -f1); do
     (
       set -x
       heroku destroy $APP

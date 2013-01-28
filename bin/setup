@@ -3,7 +3,7 @@ source bin/ferret.sh
 
 run "Installing heroku plugins..." <<'EOF'
   heroku plugins:install https://github.com/ddollar/heroku-anvil
-  heroku plugins:install https://github.com/heroku/manager-cli.git
+  heroku plugins:install git@github.com:heroku/heroku-orgs.git
 EOF
 
 run "Sourcing env.sample for .env..." <<'EOF'
@@ -16,7 +16,7 @@ run "Managing user..." <<'EOF'
   unset HEROKU_API_KEY
 
   set -x
-  heroku manager:add_user --org $ORG --user $HEROKU_USERNAME --role admin
+  heroku members:add $HEROKU_USER_NAME --org $ORG --role admin
   heroku sudo labs:enable create-bamboo --user $HEROKU_USERNAME
   heroku sudo labs:enable logplex-beta-program --user $HEROKU_USERNAME
 EOF
@@ -29,8 +29,7 @@ run "Creating service apps..." <<'EOF'
     OPTS=$(cat $s/create.opts 2>/dev/null)
     (
       set -x
-      heroku create $SERVICE_APP --remote s $OPTS
-      heroku manager:transfer --app $SERVICE_APP --to $ORG
+      heroku create $SERVICE_APP --org $ORG --remote s $OPTS
       heroku build $s -r $SERVICE_APP
     )
     echo
@@ -41,7 +40,15 @@ run "Creating monitor app..." <<'EOF'
   export $(cat .env)
 
   set -x
-  heroku create $APP
-  heroku manager:transfer --app $APP --to $ORG
+  heroku create $APP --org $ORG
   heroku build . -r $APP -b https://github.com/nzoschke/buildpack-ferret.git
+EOF
+
+run "Joining all apps..." <<'EOF'
+  export $(cat .env)
+  unset HEROKU_API_KEY
+
+  for APP in $(heroku list --all --org $ORG | grep "^$APP" | cut -d" " -f1); do
+    heroku join --app $APP
+  done
 EOF
